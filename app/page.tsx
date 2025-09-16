@@ -18,6 +18,7 @@ import { useAppStore } from '@/lib/store';
 export default function Home() {
   const [showAddSemester, setShowAddSemester] = useState(false);
   const [showDegreeSetup, setShowDegreeSetup] = useState(false);
+  const [dndAnnouncement, setDndAnnouncement] = useState('');
   const { 
     semesters, 
     degree,
@@ -49,8 +50,15 @@ export default function Home() {
     }
   };
   const dndAnnouncements = {
-    onDragStart: (_start: any) => {},
-    onDragUpdate: (_update: any) => {},
+    onDragStart: (start: any) => {
+      const type = start.type === 'semester' ? 'semester' : 'course';
+      setDndAnnouncement(`Started dragging ${type} item.`);
+    },
+    onDragUpdate: (update: any) => {
+      if (!update.destination) return;
+      const col = update.destination.index + 1;
+      setDndAnnouncement(`Moving to position ${col}.`);
+    },
   } as const;
   return (
     <div className="min-h-screen bg-background" id="uniplan-content">
@@ -96,6 +104,7 @@ export default function Home() {
                       <p className="text-muted-foreground mt-2">
                         Plan your semesters, manage courses, and track your progress
                       </p>
+                      <div className="sr-only" aria-live="polite" aria-atomic="true">{dndAnnouncement}</div>
                     </div>
                     
                     <Button onClick={() => setShowAddSemester(true)} size="lg" aria-label="Add semester">
