@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ export default function Home() {
   const [showAddSemester, setShowAddSemester] = useState(false);
   const [showDegreeSetup, setShowDegreeSetup] = useState(false);
   const [dndAnnouncement, setDndAnnouncement] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const { 
     semesters, 
     degree,
@@ -170,10 +171,38 @@ export default function Home() {
                       <div className="sr-only" aria-live="polite" aria-atomic="true">{dndAnnouncement}</div>
                     </div>
                     
-                    <Button onClick={() => setShowAddSemester(true)} size="lg" aria-label="Add semester">
-                      <Plus className="h-5 w-5 mr-2" />
-                      Add Semester
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        onClick={() => setShowAddSemester(true)} 
+                        size="sm" 
+                        variant="outline"
+                        aria-label="Add semester"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Semester
+                      </Button>
+                      
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            setIsSaving(true);
+                            await useAppStore.getState().saveAllToSupabase();
+                            // Success feedback could be added here with a toast
+                          } catch (error) {
+                            console.error('Failed to save:', error);
+                            // Error feedback could be added here with a toast
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }} 
+                        size="lg" 
+                        aria-label="Save plan to database"
+                        disabled={isSaving}
+                      >
+                        <Save className="h-5 w-5 mr-2" />
+                        {isSaving ? 'Saving...' : 'Save Plan'}
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="-mx-2 sm:mx-0">

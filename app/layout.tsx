@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'UniPlan - University Planner & Scheduler',
+  title: 'DegreePlan',
   description: 'Plan your university journey with semester management, course scheduling, and GPA tracking.',
   manifest: '/manifest.json',
   themeColor: '#3b82f6',
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'UniPlan'
+    title: 'DegreePlan'
   }
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3b82f6" />
