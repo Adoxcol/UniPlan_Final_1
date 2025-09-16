@@ -142,6 +142,7 @@ export const useAppStore = create<AppState>()(
               ? { ...s, isActive: true }
               : { ...s, isActive: false }
           ),
+          currentSemester: semesterId,
         }));
       },
 
@@ -253,6 +254,12 @@ export const useAppStore = create<AppState>()(
         });
         
         return timeSlots;
+      },
+
+      getActiveSemester: () => {
+        const state = get();
+        return state.semesters.find(s => s.id === state.currentSemester) 
+          || state.semesters.find(s => s.isActive);
       },
 
       loadData: () => {

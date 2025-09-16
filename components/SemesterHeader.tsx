@@ -63,13 +63,13 @@ export function SemesterHeader({
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Semester actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {!semester.isActive && (
-            <DropdownMenuItem onClick={handleSetActive}>
+            <DropdownMenuItem onClick={handleSetActive} aria-label="Mark semester as active">
               <Calendar className="h-4 w-4 mr-2" />
               Mark as Active
             </DropdownMenuItem>

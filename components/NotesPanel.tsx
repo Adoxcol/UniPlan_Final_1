@@ -37,8 +37,7 @@ export function NotesPanel() {
     if (selectedNoteScope === 'course' && selectedSemesterForNotes && selectedCourseForNotes) {
       const semester = semesters.find(s => s.id === selectedSemesterForNotes);
       const course = semester?.courses.find(c => c.id === selectedCourseForNotes);
-      // For now, we'll use global notes for courses since we haven't added course notes to the schema
-      return notes;
+      return course?.notes || '';
     }
     
     return '';
@@ -51,8 +50,10 @@ export function NotesPanel() {
       // Update semester notes through the store
       const { updateSemester } = useAppStore.getState();
       updateSemester(selectedSemesterForNotes, { notes: newNotes });
+    } else if (selectedNoteScope === 'course' && selectedSemesterForNotes && selectedCourseForNotes) {
+      const { updateCourse } = useAppStore.getState();
+      updateCourse(selectedSemesterForNotes, selectedCourseForNotes, { notes: newNotes });
     } else {
-      // For course notes, we'll use global notes for now
       setNotes(newNotes);
     }
   };
@@ -80,6 +81,7 @@ export function NotesPanel() {
               size="sm"
               onClick={() => setIsExpanded(false)}
               className="h-8 w-8 p-0"
+              aria-label="Close notes"
             >
               <X className="h-4 w-4" />
             </Button>

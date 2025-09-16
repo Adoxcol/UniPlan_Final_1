@@ -7,6 +7,7 @@ export interface Course {
   endTime?: string;
   grade?: number; // 0-4 GPA scale
   color?: string;
+  notes?: string;
 }
 
 export interface Semester {
@@ -78,6 +79,7 @@ export interface AppState {
   calculateCumulativeGPA: () => number;
   getScheduleConflicts: (semesterId?: string) => ScheduleConflict[];
   getCurrentSchedule: (semesterId?: string) => TimeSlot[];
+  getActiveSemester: () => Semester | undefined;
   
   loadData: () => void;
   saveData: () => void;

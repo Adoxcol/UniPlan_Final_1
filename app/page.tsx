@@ -94,7 +94,7 @@ export default function Home() {
                       </p>
                     </div>
                     
-                    <Button onClick={() => setShowAddSemester(true)} size="lg">
+                    <Button onClick={() => setShowAddSemester(true)} size="lg" aria-label="Add semester">
                       <Plus className="h-5 w-5 mr-2" />
                       Add Semester
                     </Button>
