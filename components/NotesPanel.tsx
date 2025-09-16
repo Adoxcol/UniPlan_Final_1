@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAppStore } from '@/lib/store';
-import { Calendar } from './ui/calendar';
 
 export function NotesPanel() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -61,7 +60,7 @@ export function NotesPanel() {
   
   const currentNotes = getCurrentNotes();
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4">
+    <div className="fixed bottom-4 right-4 z-50">
       <Sheet open={isExpanded} onOpenChange={setIsExpanded}>
         <SheetTrigger asChild>
           <Button
@@ -81,14 +80,14 @@ export function NotesPanel() {
             </div>
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[85vh] sm:h-[70vh] p-0">
+        <SheetContent side="right" className="w-[90vw] sm:w-[450px] p-0 max-w-full">
           <div className="h-full flex flex-col">
-            <div className="px-4 py-3 border-b bg-amber-50 dark:bg-amber-900/20 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <StickyNote className="h-5 w-5" />
-                Notes
+              <div className="px-4 py-4 border-b bg-amber-50 dark:bg-amber-900/20 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <StickyNote className="h-5 w-5 text-amber-600" />
+                  <span className="text-amber-800 dark:text-amber-200">Smart Notes</span>
+                </div>
               </div>
-            </div>
             <div className="p-4 flex-1 min-h-0 flex flex-col">
               <div className="space-y-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -133,7 +132,7 @@ export function NotesPanel() {
                         {semesters.map(semester => (
                           <SelectItem key={semester.id} value={semester.id}>
                             <div className="flex items-center gap-2">
-                              {semester.isActive && <Calendar className="h-3 w-3 text-green-600" />}
+                              {semester.isActive && <span className="h-2 w-2 rounded-full bg-green-600" />}
                               {semester.name}
                             </div>
                           </SelectItem>
