@@ -17,8 +17,8 @@ export function ScheduleView() {
   const { getCurrentSchedule, getScheduleConflicts, currentSemester, semesters } = useAppStore();
   const activeSemester = semesters.find(s => s.id === currentSemester) ?? semesters.find(s => s.isActive);
   
-  const schedule = getCurrentSchedule(currentSemester || undefined);
-  const conflicts = getScheduleConflicts(currentSemester || undefined);
+  const schedule = getCurrentSchedule(activeSemester?.id);
+  const conflicts = getScheduleConflicts(activeSemester?.id);
 
   const getCoursesForTimeSlot = (day: string, time: string) => {
     return schedule.filter(slot => {

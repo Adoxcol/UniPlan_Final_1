@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SemesterHeader } from './SemesterHeader';
 import { SemesterStats } from './SemesterStats';
@@ -20,6 +20,11 @@ export function SemesterCard({ semester, index }: SemesterCardProps) {
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditSemester, setShowEditSemester] = useState(false);
   const { removeSemester, calculateSemesterGPA } = useAppStore();
+
+  // Derive a stable accent color from the card index
+  const hue = (index * 65) % 360;
+  const accentColor = `hsl(${hue}, 70%, 45%)`;
+  const tintColor = `hsla(${hue}, 90%, 45%, 0.08)`;
 
   const semesterGPA = calculateSemesterGPA(semester.id);
   const totalCredits = semester.courses.reduce((sum, course) => sum + course.credits, 0);
@@ -43,7 +48,12 @@ export function SemesterCard({ semester, index }: SemesterCardProps) {
             className={`h-fit group hover:shadow-lg transition-all duration-300 ${
               snapshot.isDragging ? 'rotate-1 scale-105 shadow-2xl' : ''
             }`}
+            style={{
+              borderColor: accentColor,
+              backgroundImage: `linear-gradient(180deg, ${tintColor}, transparent 140px)`
+            }}
           >
+            <div style={{ height: 4, backgroundColor: accentColor }} />
             <CardHeader className="pb-4" {...provided.dragHandleProps}>
               <SemesterHeader
                 semester={semester}
@@ -64,6 +74,7 @@ export function SemesterCard({ semester, index }: SemesterCardProps) {
               <CourseList
                 courses={semester.courses}
                 semesterId={semester.id}
+                accentColor={accentColor}
                 onAddCourse={() => setShowAddCourse(true)}
               />
             </CardContent>
