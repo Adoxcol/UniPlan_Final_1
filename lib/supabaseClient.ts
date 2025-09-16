@@ -38,15 +38,31 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
 // Add global error handler for auth events
 if (typeof window !== 'undefined') {
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'TOKEN_REFRESHED') {
-      console.log('Token refreshed successfully');
-    } else if (event === 'SIGNED_OUT') {
-      console.log('User signed out');
-    } else if (event === 'SIGNED_IN') {
-      console.log('User signed in');
+    // Only log auth events in development
+    if (process.env.NODE_ENV === 'development') {
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+      } else if (event === 'SIGNED_IN') {
+        console.log('User signed in');
+      }
     }
   });
 }
+
+// Export a helper function for development logging
+export const devLog = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Supabase] ${message}`, ...args);
+  }
+};
+
+export const devError = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[Supabase] ${message}`, ...args);
+  }
+};
 
 // Export a helper function to check if Supabase is configured
 export const isSupabaseConfigured = (): boolean => {

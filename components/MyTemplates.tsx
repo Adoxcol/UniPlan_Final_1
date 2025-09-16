@@ -127,7 +127,8 @@ export function MyTemplates({ open, onOpenChange, onCreateNew }: MyTemplatesProp
   const handleShareTemplate = async (template: DegreeTemplate) => {
     try {
       const shareUrl = `${window.location.origin}/templates/${template.id}`;
-      await navigator.clipboard.writeText(shareUrl);
+      const { copyToClipboard } = await import('@/lib/utils');
+      await copyToClipboard(shareUrl);
       toast.success('Template link copied to clipboard!');
     } catch (error) {
       console.error('Error copying link:', error);

@@ -1,24 +1,36 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { BookOpen, TrendingUp, Award, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/lib/store';
 
-export function ProgressSection() {
+function ProgressSectionComponent() {
   const { semesters, calculateCumulativeGPA, degree } = useAppStore();
   
-  const allCourses = semesters.flatMap(s => s.courses);
-  const totalCredits = allCourses.reduce((sum, course) => sum + course.credits, 0);
-  const completedCredits = allCourses
-    .filter(course => course.grade !== undefined)
-    .reduce((sum, course) => sum + course.credits, 0);
-  const cumulativeGPA = calculateCumulativeGPA();
+  // Memoize expensive calculations
+  const progressStats = useMemo(() => {
+    const allCourses = semesters.flatMap(s => s.courses);
+    const totalCredits = allCourses.reduce((sum, course) => sum + course.credits, 0);
+    const completedCredits = allCourses
+      .filter(course => course.grade !== undefined)
+      .reduce((sum, course) => sum + course.credits, 0);
+    const cumulativeGPA = calculateCumulativeGPA();
+    
+    const degreeProgressPercentage = degree ? (completedCredits / degree.totalCreditsRequired) * 100 : 0;
+    const semesterProgressPercentage = totalCredits > 0 ? (completedCredits / totalCredits) * 100 : 0;
+    
+    return {
+      totalCredits,
+      completedCredits,
+      cumulativeGPA,
+      degreeProgressPercentage,
+      semesterProgressPercentage
+    };
+  }, [semesters, calculateCumulativeGPA, degree]);
   
-  const degreeProgressPercentage = degree ? (completedCredits / degree.totalCreditsRequired) * 100 : 0;
-  const semesterProgressPercentage = totalCredits > 0 ? (completedCredits / totalCredits) * 100 : 0;
-  
-  if (totalCredits === 0) return null;
+  if (progressStats.totalCredits === 0) return null;
 
   return (
     <div className="mb-8">
@@ -26,7 +38,7 @@ export function ProgressSection() {
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-2">{degree.name}</h3>
           <p className="text-sm text-muted-foreground">
-            {completedCredits} of {degree.totalCreditsRequired} credits completed
+            {progressStats.completedCredits} of {degree.totalCreditsRequired} credits completed
           </p>
         </div>
       )}
@@ -43,7 +55,7 @@ export function ProgressSection() {
                   {degree ? 'Degree Credits' : 'Total Credits'}
                 </p>
                 <p className="text-2xl font-bold">
-                  {degree ? degree.totalCreditsRequired : totalCredits}
+                  {degree ? degree.totalCreditsRequired : progressStats.totalCredits}
                 </p>
               </div>
             </div>
@@ -58,7 +70,7 @@ export function ProgressSection() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">{completedCredits}</p>
+                <p className="text-2xl font-bold">{progressStats.completedCredits}</p>
               </div>
             </div>
           </CardContent>
@@ -68,12 +80,12 @@ export function ProgressSection() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Progress</p>
+                <p className="text-sm text-muted-foreground">Cumulative GPA</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(degree ? degreeProgressPercentage : semesterProgressPercentage)}%
+                  {progressStats.cumulativeGPA > 0 ? progressStats.cumulativeGPA.toFixed(2) : '--'}
                 </p>
               </div>
             </div>
@@ -83,34 +95,34 @@ export function ProgressSection() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                <Award className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">CGPA</p>
-                <p className="text-2xl font-bold">{cumulativeGPA.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Progress</p>
+                <p className="text-2xl font-bold">
+                  {degree 
+                    ? `${Math.round(progressStats.degreeProgressPercentage)}%`
+                    : `${Math.round(progressStats.semesterProgressPercentage)}%`
+                  }
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-      
-      <Card className="mt-4">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
-              {degree ? 'Degree Progress' : 'Academic Progress'}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {completedCredits} of {degree ? degree.totalCreditsRequired : totalCredits} credits
-            </span>
+
+      {degree && (
+        <div className="mt-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span>Degree Progress</span>
+            <span>{Math.round(progressStats.degreeProgressPercentage)}%</span>
           </div>
-          <Progress 
-            value={degree ? degreeProgressPercentage : semesterProgressPercentage} 
-            className="h-2" 
-          />
-        </CardContent>
-      </Card>
+          <Progress value={progressStats.degreeProgressPercentage} className="h-2" />
+        </div>
+      )}
     </div>
   );
 }
+
+export const ProgressSection = memo(ProgressSectionComponent);

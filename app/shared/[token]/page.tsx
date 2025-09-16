@@ -61,7 +61,8 @@ export default function SharedPlanPage() {
 
   const handleCopyUrl = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const { copyToClipboard } = await import('@/lib/utils');
+      await copyToClipboard(window.location.href);
       toast.success('URL copied to clipboard!');
     } catch (error) {
       toast.error('Failed to copy URL');

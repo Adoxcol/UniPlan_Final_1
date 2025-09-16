@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Save } from 'lucide-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProgressSection } from '@/components/ProgressSection';
 import { DegreeSetupDialog } from '@/components/DegreeSetupDialog';
 import { SemesterSkeleton, ScheduleSkeleton, ProgressSkeleton } from '@/components/SkeletonLoaders';
+import { SavingIndicator } from '@/components/SavingIndicator';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,7 +35,8 @@ export default function Home() {
     reorderSemesters, 
     reorderCourses,
     isLoading,
-    isSyncing 
+    isSyncing,
+    isInitialLoading 
   } = useAppStore();
   const { userId } = useAuth();
   
@@ -47,6 +49,60 @@ export default function Home() {
   // Enable service worker
   useServiceWorker();
 
+  // Memoized calculations for better performance
+  const semesterStats = useMemo(() => {
+    if (!semesters.length) return { totalCredits: 0, completedCredits: 0, overallGPA: 0 };
+    
+    let totalCredits = 0;
+    let completedCredits = 0;
+    let totalGradePoints = 0;
+    
+    semesters.forEach(semester => {
+      semester.courses.forEach(course => {
+        totalCredits += course.credits;
+        if (course.grade !== undefined && course.grade !== null) {
+          completedCredits += course.credits;
+          totalGradePoints += course.grade * course.credits;
+        }
+      });
+    });
+    
+    const overallGPA = completedCredits > 0 ? totalGradePoints / completedCredits : 0;
+    
+    return { totalCredits, completedCredits, overallGPA };
+  }, [semesters]);
+
+  // Memoized schedule conflicts calculation
+  const scheduleConflicts = useMemo(() => {
+    const conflicts: string[] = [];
+    const timeSlots = new Map<string, { courseId: string; courseName: string; semesterId: string }[]>();
+    
+    semesters.forEach(semester => {
+      semester.courses.forEach(course => {
+        if (course.daysOfWeek && course.startTime && course.endTime) {
+          course.daysOfWeek.forEach(day => {
+            const timeKey = `${day}-${course.startTime}-${course.endTime}`;
+            if (!timeSlots.has(timeKey)) {
+              timeSlots.set(timeKey, []);
+            }
+            timeSlots.get(timeKey)!.push({
+              courseId: course.id,
+              courseName: course.name,
+              semesterId: semester.id
+            });
+          });
+        }
+      });
+    });
+    
+    timeSlots.forEach((courses, timeKey) => {
+      if (courses.length > 1) {
+        conflicts.push(`Time conflict at ${timeKey}: ${courses.map(c => c.courseName).join(', ')}`);
+      }
+    });
+    
+    return conflicts;
+  }, [semesters]);
   // Theme is now handled by next-themes ThemeProvider
 
   // Load from Supabase on login
@@ -82,7 +138,8 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const handleDragEnd = (result: DropResult) => {
+  // Optimized drag and drop handler with useCallback
+  const handleDragEnd = useCallback((result: DropResult) => {
     if (!result.destination) return;
 
     const { source, destination, type } = result;
@@ -96,8 +153,10 @@ export default function Home() {
     // Focus management after DnD
     const movedEl = document.querySelector<HTMLElement>(`[data-draggable-id="${result.draggableId}"]`);
     movedEl?.focus();
-  };
-  const dndAnnouncements = {
+  }, [reorderSemesters, reorderCourses]);
+
+  // Optimized DnD announcements with useCallback
+  const dndAnnouncements = useMemo(() => ({
     onDragStart: (start: { type: string; draggableId: string }) => {
       const type = start.type === 'semester' ? 'semester' : 'course';
       setDndAnnouncement(`Started dragging ${type} item.`);
@@ -107,7 +166,7 @@ export default function Home() {
       const col = update.destination.index + 1;
       setDndAnnouncement(`Moving to position ${col}.`);
     },
-  } as const;
+  } as const), []);
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background" id="uniplan-content">
@@ -118,7 +177,7 @@ export default function Home() {
           <AuthPanel />
         ) : !degree ? (
           <EmptyState onSetupDegree={() => setShowDegreeSetup(true)} />
-        ) : isLoading || isSyncing ? (
+        ) : isInitialLoading ? (
           <>
             <ProgressSkeleton />
             {showScheduleView ? (
@@ -266,6 +325,8 @@ export default function Home() {
         open={showDegreeSetup}
         onClose={() => setShowDegreeSetup(false)}
       />
+      
+      <SavingIndicator />
       </div>
     </ErrorBoundary>
   );

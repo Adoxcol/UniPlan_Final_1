@@ -7,16 +7,29 @@ const STATIC_ASSETS = [
   // Add other static assets as needed
 ];
 
+// Helper function for development logging
+const devLog = (message, ...args) => {
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    console.log(message, ...args);
+  }
+};
+
+const devError = (message, ...args) => {
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    console.error(message, ...args);
+  }
+};
+
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Service Worker: Caching static assets');
+        devLog('Service Worker: Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
       .catch((error) => {
-        console.error('Service Worker: Failed to cache static assets', error);
+        devError('Service Worker: Failed to cache static assets', error);
       })
   );
   self.skipWaiting();
@@ -30,7 +43,7 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== CACHE_NAME) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+              devLog('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
             }
           })
@@ -54,10 +67,10 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request)
-      .then((cachedResponse) => {
+      .then((response) => {
         // Return cached version if available
-        if (cachedResponse) {
-          return cachedResponse;
+        if (response) {
+          return response;
         }
 
         // Otherwise, fetch from network
@@ -71,6 +84,7 @@ self.addEventListener('fetch', (event) => {
             // Clone the response for caching
             const responseToCache = response.clone();
 
+            // Cache the response for future use
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
@@ -79,96 +93,83 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // If network fails and no cache, return offline page
-            if (event.request.destination === 'document') {
+            // If network fails, try to serve a fallback page for navigation requests
+            if (event.request.mode === 'navigate') {
               return caches.match('/');
             }
+            return new Response('Offline', { status: 503 });
           });
       })
   );
 });
 
-// Handle background sync for data persistence
+// Background sync for when connection is restored
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
     event.waitUntil(
-      // Attempt to sync data when connection is restored
-      syncData()
+      // Handle background sync tasks here
+      Promise.resolve()
     );
   }
 });
 
-// Sync function to handle offline data
-async function syncData() {
-  try {
-    // Get stored offline data
-    const offlineData = await getOfflineData();
-    
-    if (offlineData && offlineData.length > 0) {
-      // Send data to server when online
-      for (const data of offlineData) {
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-      }
-      
-      // Clear offline data after successful sync
-      await clearOfflineData();
-      console.log('Service Worker: Data synced successfully');
-    }
-  } catch (error) {
-    console.error('Service Worker: Failed to sync data', error);
-  }
-}
+// Push notification handling
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: data.primaryKey || 1
+      },
+      actions: [
+        {
+          action: 'explore',
+          title: 'View Details',
+          icon: '/icon-192x192.png'
+        },
+        {
+          action: 'close',
+          title: 'Close',
+          icon: '/icon-192x192.png'
+        }
+      ]
+    };
 
-// Helper functions for offline data management
-async function getOfflineData() {
-  try {
-    const cache = await caches.open('offline-data');
-    const response = await cache.match('/offline-data');
-    if (response) {
-      return await response.json();
-    }
-    return [];
-  } catch (error) {
-    console.error('Service Worker: Failed to get offline data', error);
-    return [];
-  }
-}
-
-async function clearOfflineData() {
-  try {
-    const cache = await caches.open('offline-data');
-    await cache.delete('/offline-data');
-  } catch (error) {
-    console.error('Service Worker: Failed to clear offline data', error);
-  }
-}
-
-// Store data for offline sync
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'STORE_OFFLINE_DATA') {
-    storeOfflineData(event.data.payload);
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'UniPlan', options)
+    );
   }
 });
 
-async function storeOfflineData(data) {
-  try {
-    const cache = await caches.open('offline-data');
-    const existingData = await getOfflineData();
-    const updatedData = [...existingData, { ...data, timestamp: Date.now() }];
-    
-    const response = new Response(JSON.stringify(updatedData), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    await cache.put('/offline-data', response);
-    console.log('Service Worker: Data stored for offline sync');
-  } catch (error) {
-    console.error('Service Worker: Failed to store offline data', error);
+// Notification click handling
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'explore') {
+    // Open the app
+    event.waitUntil(
+      clients.openWindow('/')
+    );
   }
-}
+});
+
+// Message handling from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Error handling
+self.addEventListener('error', (event) => {
+  devError('Service Worker error:', event.error);
+});
+
+self.addEventListener('unhandledrejection', (event) => {
+  devError('Service Worker unhandled rejection:', event.reason);
+});

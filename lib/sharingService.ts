@@ -207,16 +207,12 @@ export class SharingService {
   }
 
   /**
-   * Copy share URL to clipboard
+   * Copy share URL to clipboard with fallback support
    */
   static async copyShareUrl(shareToken: string): Promise<void> {
     const url = this.generateShareUrl(shareToken);
-    
-    if (typeof window !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
-    } else {
-      throw new Error('Clipboard API not available');
-    }
+    const { copyToClipboard } = await import('./utils');
+    await copyToClipboard(url);
   }
 
   /**

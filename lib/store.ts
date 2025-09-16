@@ -26,6 +26,7 @@ export const useAppStore = create<AppState>()(
       degree: null,
       isLoading: false,
       isSyncing: false,
+      isInitialLoading: true,
       actionHistory: [],
       historyIndex: -1,
 
@@ -214,9 +215,14 @@ export const useAppStore = create<AppState>()(
         const semester = get().semesters.find((s) => s.id === semesterId);
         if (!semester) return 0;
 
+        // Filter out courses without grades - only completed courses count toward GPA
+        // Courses in progress or planned don't affect the calculation
         const coursesWithGrades = semester.courses.filter((c) => c.grade !== undefined);
         if (coursesWithGrades.length === 0) return 0;
 
+        // Calculate weighted GPA using credit hours as weights
+        // Formula: GPA = Σ(grade × credits) / Σ(credits)
+        // This ensures courses with more credits have proportionally more impact
         const totalPoints = coursesWithGrades.reduce(
           (sum, course) => sum + (course.grade! * course.credits),
           0
@@ -226,15 +232,21 @@ export const useAppStore = create<AppState>()(
           0
         );
 
+        // Prevent division by zero, though this should be caught by the earlier check
         return totalCredits > 0 ? totalPoints / totalCredits : 0;
       },
 
       calculateCumulativeGPA: () => {
+        // Aggregate all courses from all semesters for overall GPA calculation
         const allCourses = get().semesters.flatMap((s) => s.courses);
+        // Only include courses with assigned grades in the cumulative calculation
         const coursesWithGrades = allCourses.filter((c) => c.grade !== undefined);
         
         if (coursesWithGrades.length === 0) return 0;
 
+        // Calculate cumulative GPA across all semesters using the same weighted formula
+        // This treats all courses equally regardless of which semester they were taken
+        // Formula: Cumulative GPA = Σ(all_grades × credits) / Σ(all_credits)
         const totalPoints = coursesWithGrades.reduce(
           (sum, course) => sum + (course.grade! * course.credits),
           0
@@ -249,37 +261,49 @@ export const useAppStore = create<AppState>()(
 
       getScheduleConflicts: (semesterId) => {
         const state = get();
+        // Filter to specific semester if provided, otherwise check all semesters
         const semesters = semesterId 
           ? state.semesters.filter(s => s.id === semesterId)
           : state.semesters;
         
+        // Flatten all courses from selected semesters into a single array for comparison
         const allCourses = semesters.flatMap(s => s.courses);
         const conflicts: ScheduleConflict[] = [];
         
-        // Check for time conflicts
+        // Use nested loops to compare every course with every other course (O(n²) complexity)
+        // This ensures we catch all possible conflicts between any two courses
         for (let i = 0; i < allCourses.length; i++) {
           for (let j = i + 1; j < allCourses.length; j++) {
             const course1 = allCourses[i];
             const course2 = allCourses[j];
             
+            // Skip courses that don't have complete schedule information
+            // All fields must be present to perform meaningful conflict detection
             if (!course1.daysOfWeek || !course2.daysOfWeek || 
                 !course1.startTime || !course2.startTime ||
                 !course1.endTime || !course2.endTime) continue;
                 
             // Check for overlaps between any days of the two courses
+            // A course can meet on multiple days, so we need to check all combinations
             for (const day1 of course1.daysOfWeek) {
               for (const day2 of course2.daysOfWeek) {
                 if (day1 === day2) {
+                  // Convert time strings (HH:MM) to minutes for easier comparison
                   const start1 = timeStringToMinutes(course1.startTime);
                   const end1 = timeStringToMinutes(course1.endTime);
                   const start2 = timeStringToMinutes(course2.startTime);
                   const end2 = timeStringToMinutes(course2.endTime);
                   
+                  // Check for time overlap using interval intersection logic
+                  // Two intervals [start1, end1] and [start2, end2] overlap if:
+                  // start1 < end2 AND end1 > start2
+                  // This handles all cases: partial overlap, complete containment, etc.
                   if (start1 < end2 && end1 > start2) {
                     conflicts.push({
                       courses: [course1, course2],
                       day: day1,
                       timeOverlap: {
+                        // Calculate the actual overlapping time period
                         start: start1 > start2 ? course1.startTime : course2.startTime,
                         end: end1 < end2 ? course1.endTime : course2.endTime,
                       },
@@ -376,7 +400,12 @@ export const useAppStore = create<AppState>()(
       syncFromSupabase: async () => {
           if (!supabase) return;
           const currentState = get();
-          set({ isSyncing: true, isLoading: currentState.semesters.length === 0 });
+          const isFirstLoad = currentState.semesters.length === 0;
+          set({ 
+            isSyncing: true, 
+            isLoading: isFirstLoad,
+            isInitialLoading: isFirstLoad && currentState.isInitialLoading
+          });
           const { data: { session } } = await supabase.auth.getSession();
           const userId = session?.user.id;
         if (!userId) return;
@@ -413,6 +442,7 @@ export const useAppStore = create<AppState>()(
             degree: profile?.degree_name ? { name: profile.degree_name, totalCreditsRequired: profile.degree_total_credits ?? 0 } : null,
             isSyncing: false,
             isLoading: false,
+            isInitialLoading: false,
           });
       },
 
@@ -424,7 +454,9 @@ export const useAppStore = create<AppState>()(
         const userId = session?.user.id;
         if (!userId) return;
         
-        // Fetch existing data to handle deletions
+        // Complex synchronization logic: handle both updates and deletions
+        // We need to identify items that exist in the database but not in local state
+        // and delete them to maintain consistency
         const [existingSemestersRes, existingCoursesRes] = await Promise.all([
           supabase.from('semesters').select('id').eq('user_id', userId),
           supabase.from('courses').select('id').eq('user_id', userId),
@@ -433,11 +465,12 @@ export const useAppStore = create<AppState>()(
         const existingSemesters = existingSemestersRes.data || [];
         const existingCourses = existingCoursesRes.data || [];
         
-        // Get current IDs
+        // Extract all current IDs from local state for comparison
         const currentSemesterIds = state.semesters.map(s => s.id);
         const currentCourseIds = state.semesters.flatMap(s => s.courses.map(c => c.id));
         
-        // Find IDs to delete
+        // Identify orphaned records: items that exist in database but not in local state
+        // These need to be deleted to reflect user's local changes (deletions)
         const semesterIdsToDelete = existingSemesters
           .filter((s: any) => !currentSemesterIds.includes(s.id))
         .map((s: any) => s.id);
@@ -446,7 +479,8 @@ export const useAppStore = create<AppState>()(
           .filter((c: any) => !currentCourseIds.includes(c.id))
         .map((c: any) => c.id);
         
-        // Delete removed items
+        // Perform deletions first to maintain referential integrity
+        // Delete courses before semesters due to foreign key constraints
         if (courseIdsToDelete.length > 0) {
           await supabase.from('courses')
             .delete()
@@ -459,7 +493,8 @@ export const useAppStore = create<AppState>()(
             .in('id', semesterIdsToDelete);
         }
         
-        // upsert profile
+        // Upsert profile data (insert or update based on user_id)
+        // This handles both new users and updates to existing profiles
         await supabase.from('profiles').upsert({
           user_id: userId,
           notes: state.notes,
@@ -467,23 +502,25 @@ export const useAppStore = create<AppState>()(
           degree_total_credits: state.degree?.totalCreditsRequired ?? null,
         });
         
-        // upsert semesters
+        // Transform local semester data to match database schema
+        // Convert boolean isActive to database boolean format
         const semestersPayload = state.semesters.map(s => ({
           id: s.id,
           user_id: userId,
           name: s.name,
           year: s.year,
           season: s.season,
-          is_active: !!s.isActive,
+          is_active: !!s.isActive, // Ensure boolean conversion
           notes: s.notes ?? null,
         }));
         await supabase.from('semesters').upsert(semestersPayload);
         
-        // upsert courses
+        // Flatten nested course structure and transform to database schema
+        // Each course needs its parent semester_id for relational integrity
         const coursesPayload = state.semesters.flatMap(s => s.courses.map(c => ({
           id: c.id,
           user_id: userId,
-          semester_id: s.id,
+          semester_id: s.id, // Establish parent-child relationship
           name: c.name,
           credits: c.credits,
           days_of_week: c.daysOfWeek ?? null,
@@ -497,35 +534,43 @@ export const useAppStore = create<AppState>()(
         set({ isSyncing: false });
       },
 
-      // Action history methods
+      // Action history methods for implementing undo/redo functionality
       saveToHistory: (action: string, data: Record<string, any>) => {
         const state = get();
+        // Create a snapshot of the current state before the action
+        // Deep clone the data to prevent reference issues when restoring state
         const newAction: ActionHistoryItem = {
           type: action,
-          data: JSON.parse(JSON.stringify(data)),
+          data: JSON.parse(JSON.stringify(data)), // Deep clone to avoid mutations
           timestamp: Date.now()
         };
         
-        // Remove any actions after current index (when undoing then doing new action)
+        // Implement branching history: when user undoes then performs a new action,
+        // we discard the "future" actions to create a linear history
+        // This prevents confusing redo behavior after new actions
         const newHistory = state.actionHistory.slice(0, state.historyIndex + 1);
         newHistory.push(newAction);
         
-        // Keep only last 50 actions
+        // Memory management: keep only the last 50 actions to prevent unbounded growth
+        // This balances functionality with memory usage
         const trimmedHistory = newHistory.slice(-50);
         
         set({
           actionHistory: trimmedHistory,
-          historyIndex: trimmedHistory.length - 1
+          historyIndex: trimmedHistory.length - 1 // Point to the latest action
         });
       },
 
       undo: () => {
         const state = get();
+        // Can't undo if we're at the beginning of history or history is empty
         if (state.historyIndex <= 0) return;
         
+        // Get the state snapshot from before the current action
         const previousAction = state.actionHistory[state.historyIndex - 1];
         if (previousAction) {
-          // Restore previous state based on action type
+          // Restore the previous state based on the action type
+          // All semester and course actions affect the semesters array
           switch (previousAction.type) {
             case 'ADD_SEMESTER':
             case 'DELETE_SEMESTER':
@@ -540,12 +585,14 @@ export const useAppStore = create<AppState>()(
               set({ semesters: previousAction.data.semesters });
               break;
           }
+          // Move the history pointer backward
           set({ historyIndex: state.historyIndex - 1 });
         }
       },
 
       redo: () => {
         const state = get();
+        // Can't redo if we're at the end of history
         if (state.historyIndex >= state.actionHistory.length - 1) return;
         
         const nextAction = state.actionHistory[state.historyIndex + 1];
@@ -569,28 +616,34 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      // Data export/import methods
+      // Data export/import methods for backup and data portability
       exportData: () => {
         const state = get();
+        // Create a standardized export format with metadata for version compatibility
+        // Include timestamp and version for future migration support
         const exportData = {
-          semesters: state.semesters,
-          notes: state.notes,
-          degree: state.degree,
-          exportDate: new Date().toISOString(),
-          version: '1.0'
+          semesters: state.semesters,    // Complete semester and course data
+          notes: state.notes,            // Global notes
+          degree: state.degree,          // Degree information
+          exportDate: new Date().toISOString(), // Export timestamp for tracking
+          version: '1.0'                 // Schema version for future compatibility
         };
         
+        // Pretty-print JSON for human readability and easier debugging
         return JSON.stringify(exportData, null, 2);
       },
 
       importData: (jsonData: string) => {
         try {
+          // Parse JSON string - this can throw if invalid JSON
           const data = JSON.parse(jsonData);
           
-          // Validate the data structure with Zod
+          // Validate the data structure with Zod schema to ensure data integrity
+          // This prevents importing corrupted or incompatible data that could break the app
           const validatedData = importDataSchema.parse(data);
           
-          // Save current state to history before importing
+          // Create a restore point before importing - allows user to undo import
+          // This is critical for data safety when importing potentially destructive changes
           const currentState = get();
           get().saveToHistory('IMPORT_DATA', {
             semesters: currentState.semesters,
@@ -598,22 +651,28 @@ export const useAppStore = create<AppState>()(
             degree: currentState.degree
           });
           
+          // Replace current state with imported data
+          // Use fallback values to handle partial imports gracefully
           set({
             semesters: validatedData.semesters || [],
             notes: validatedData.notes || '',
             degree: validatedData.degree || null,
+            // Set current semester to first imported semester for better UX
             currentSemester: validatedData.semesters?.[0]?.id || null
           });
           
           return { success: true, message: 'Data imported successfully!' };
         } catch (error) {
+          // Handle validation errors with detailed feedback
           if (error instanceof z.ZodError) {
+            // Transform Zod errors into user-friendly messages
             const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
             return { 
               success: false, 
               message: `Import failed - Invalid data format: ${errorMessages}` 
             };
           }
+          // Handle other errors (JSON parsing, etc.)
           return { 
             success: false, 
             message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}` 

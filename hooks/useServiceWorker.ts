@@ -2,12 +2,25 @@
 
 import { useEffect } from 'react';
 
+// Helper function for development logging
+const devLog = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[ServiceWorker] ${message}`, ...args);
+  }
+};
+
+const devError = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[ServiceWorker] ${message}`, ...args);
+  }
+};
+
 export function useServiceWorker() {
   useEffect(() => {
     const registerServiceWorker = async () => {
       // Skip service worker registration in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('Skipping service worker registration in development mode');
+        devLog('Skipping service worker registration in development mode');
         return;
       }
       
@@ -15,7 +28,7 @@ export function useServiceWorker() {
         try {
           // Additional safety check for document state
           if (document.readyState !== 'complete') {
-            console.log('Document not ready, skipping service worker registration');
+            devLog('Document not ready, skipping service worker registration');
             return;
           }
           
@@ -24,16 +37,16 @@ export function useServiceWorker() {
           try {
             existingRegistration = await navigator.serviceWorker.getRegistration();
           } catch (getRegError) {
-            console.log('Could not check existing registration, proceeding with new registration');
+            devLog('Could not check existing registration, proceeding with new registration');
           }
           
           if (existingRegistration) {
-            console.log('Service Worker already registered');
+            devLog('Service Worker already registered');
             return;
           }
           
           const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('Service Worker registered successfully:', registration);
+          devLog('Service Worker registered successfully:', registration);
              
            // Listen for updates
            registration.addEventListener('updatefound', () => {
@@ -49,46 +62,56 @@ export function useServiceWorker() {
                });
              }
            });
-         } catch (error) {
-           console.error('Service Worker registration failed:', error);
-         }
-
-        // Listen for messages from service worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'SYNC_COMPLETE') {
-            console.log('Data sync completed');
-          }
-        });
+           
+        } catch (error) {
+          devError('Service Worker registration failed:', error);
+        }
+      } else {
+        devLog('Service Worker not supported');
       }
     };
 
-    if (document.readyState === 'complete') {
-       // Add a small delay to ensure browser is fully ready
-       setTimeout(registerServiceWorker, 100);
-     } else {
-       const handleLoad = () => {
-         setTimeout(registerServiceWorker, 100);
-       };
-       window.addEventListener('load', handleLoad);
-       return () => window.removeEventListener('load', handleLoad);
-     }
+    // Register service worker when component mounts
+    registerServiceWorker();
+
+    // Cleanup function
+    return () => {
+      // No cleanup needed for service worker registration
+    };
   }, []);
 
-  // Function to store data for offline sync
-  const storeOfflineData = (data: any) => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'STORE_OFFLINE_DATA',
-        payload: data
-      });
+  // Function to manually update service worker
+  const updateServiceWorker = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+          devLog('Service Worker update triggered');
+        }
+      } catch (error) {
+        devError('Service Worker update failed:', error);
+      }
     }
   };
 
-  // Function to check if app is online
-  const isOnline = () => navigator.onLine;
+  // Function to unregister service worker (useful for development)
+  const unregisterServiceWorker = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.unregister();
+          devLog('Service Worker unregistered');
+        }
+      } catch (error) {
+        devError('Service Worker unregistration failed:', error);
+      }
+    }
+  };
 
   return {
-    storeOfflineData,
-    isOnline
+    updateServiceWorker,
+    unregisterServiceWorker,
   };
 }

@@ -169,6 +169,7 @@ export interface AppState {
   } | null;
   isLoading: boolean;
   isSyncing: boolean;
+  isInitialLoading: boolean;
   actionHistory: ActionHistoryItem[];
   historyIndex: number;
   

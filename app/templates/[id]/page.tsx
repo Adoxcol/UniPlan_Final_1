@@ -79,7 +79,8 @@ export default function TemplatePage() {
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const { copyToClipboard } = await import('@/lib/utils');
+      await copyToClipboard(window.location.href);
       toast.success('Template link copied to clipboard!');
     } catch (error) {
       console.error('Error copying link:', error);
