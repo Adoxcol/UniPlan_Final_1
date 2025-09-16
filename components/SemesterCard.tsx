@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SemesterHeader } from './SemesterHeader';
@@ -16,7 +16,7 @@ interface SemesterCardProps {
   index: number;
 }
 
-export function SemesterCard({ semester, index }: SemesterCardProps) {
+function SemesterCardComponent({ semester, index }: SemesterCardProps) {
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditSemester, setShowEditSemester] = useState(false);
   const { removeSemester, calculateSemesterGPA } = useAppStore();
@@ -96,3 +96,5 @@ export function SemesterCard({ semester, index }: SemesterCardProps) {
     </Draggable>
   );
 }
+
+export const SemesterCard = memo(SemesterCardComponent);

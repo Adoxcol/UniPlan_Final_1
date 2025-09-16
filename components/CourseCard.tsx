@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Clock, Star, MoreHorizontal, Edit3, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ const gradeToLetter = (grade: number): string => {
   return 'F';
 };
 
-export function CourseCard({ course, semesterId }: CourseCardProps) {
+function CourseCardComponent({ course, semesterId }: CourseCardProps) {
   const [showEditCourse, setShowEditCourse] = useState(false);
   const { removeCourse } = useAppStore();
 
@@ -125,3 +125,5 @@ export function CourseCard({ course, semesterId }: CourseCardProps) {
     </>
   );
 }
+
+export const CourseCard = memo(CourseCardComponent);

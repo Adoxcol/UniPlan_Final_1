@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AppState, Semester, Course, ScheduleConflict, TimeSlot } from './types';
+import { timeStringToMinutes } from './utils';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -206,12 +207,12 @@ export const useAppStore = create<AppState>()(
             for (const day1 of course1.daysOfWeek) {
               for (const day2 of course2.daysOfWeek) {
                 if (day1 === day2) {
-                  const start1 = new Date(`2000-01-01 ${course1.startTime}`);
-                  const end1 = new Date(`2000-01-01 ${course1.endTime}`);
-                  const start2 = new Date(`2000-01-01 ${course2.startTime}`);
-                  const end2 = new Date(`2000-01-01 ${course2.endTime}`);
+                  const start1 = timeStringToMinutes(course1.startTime);
+                  const end1 = timeStringToMinutes(course1.endTime);
+                  const start2 = timeStringToMinutes(course2.startTime);
+                  const end2 = timeStringToMinutes(course2.endTime);
                   
-                  if ((start1 < end2 && end1 > start2)) {
+                  if (start1 < end2 && end1 > start2) {
                     conflicts.push({
                       courses: [course1, course2],
                       day: day1,
@@ -253,7 +254,13 @@ export const useAppStore = create<AppState>()(
           });
         });
         
-        return timeSlots;
+        // Sort by day then start time (minutes)
+        return timeSlots.sort((a, b) => {
+          if (a.day === b.day) {
+            return timeStringToMinutes(a.startTime) - timeStringToMinutes(b.startTime);
+          }
+          return a.day.localeCompare(b.day);
+        });
       },
 
       getActiveSemester: () => {

@@ -2,6 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { CourseCard } from './CourseCard';
 import type { Course } from '@/lib/types';
@@ -13,7 +14,7 @@ interface CourseListProps {
   accentColor?: string;
 }
 
-export function CourseList({ courses, semesterId, onAddCourse, accentColor }: CourseListProps) {
+function CourseListComponent({ courses, semesterId, onAddCourse, accentColor }: CourseListProps) {
   return (
     <Droppable droppableId={`semester-${semesterId}`} type="course">
       {(provided, snapshot) => (
@@ -62,3 +63,5 @@ export function CourseList({ courses, semesterId, onAddCourse, accentColor }: Co
     </Droppable>
   );
 }
+
+export const CourseList = memo(CourseListComponent);
