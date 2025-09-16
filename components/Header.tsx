@@ -21,14 +21,18 @@ export function Header() {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/90 dark:border-border/50">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-sm">UP</span>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo.svg" 
+              alt="DegreePlan Logo" 
+              className="h-10 w-10" 
+            />
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text leading-tight">DegreePlan</h1>
+              <div className="hidden md:block text-xs text-muted-foreground/80 dark:text-muted-foreground leading-tight">
+                Your Personal University Roadmap
+              </div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">UniPlan</h1>
-          </div>
-          <div className="hidden md:block text-sm text-muted-foreground/80 dark:text-muted-foreground">
-            Your Personal University Roadmap
           </div>
         </div>
 
