@@ -308,6 +308,18 @@ export const useAppStore = create<AppState>()(
         
         pdf.save('uniplan-roadmap.pdf');
       },
+
+      reset: () => set({
+        semesters: [],
+        currentSemester: null,
+        notes: '',
+        theme: 'light',
+        showScheduleView: false,
+        selectedNoteScope: 'global',
+        selectedSemesterForNotes: null,
+        selectedCourseForNotes: null,
+        degree: null,
+      }),
     }),
     {
       name: 'uniplan-storage',

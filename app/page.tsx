@@ -48,6 +48,10 @@ export default function Home() {
       reorderCourses(semesterId, source.index, destination.index);
     }
   };
+  const dndAnnouncements = {
+    onDragStart: (_start: any) => {},
+    onDragUpdate: (_update: any) => {},
+  } as const;
   return (
     <div className="min-h-screen bg-background" id="uniplan-content">
       <Header />
@@ -100,7 +104,7 @@ export default function Home() {
                     </Button>
                   </div>
 
-                  <DragDropContext onDragEnd={handleDragEnd}>
+                  <DragDropContext onDragEnd={handleDragEnd} onDragStart={dndAnnouncements.onDragStart} onDragUpdate={dndAnnouncements.onDragUpdate}>
                     <Droppable droppableId="semesters" type="semester" direction="horizontal">
                       {(provided) => (
                         <div

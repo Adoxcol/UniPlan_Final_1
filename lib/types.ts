@@ -84,4 +84,5 @@ export interface AppState {
   loadData: () => void;
   saveData: () => void;
   exportToPDF: () => Promise<void>;
+  reset: () => void;
 }
