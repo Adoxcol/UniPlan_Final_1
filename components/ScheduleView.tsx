@@ -77,7 +77,8 @@ export function ScheduleView() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-8 gap-2">
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <div className="min-w-[720px] sm:min-w-0 grid grid-cols-8 gap-2 px-2 sm:px-0">
             {/* Header row */}
             <div className="font-semibold text-sm p-2">Time</div>
             {DAYS.map(day => (
@@ -124,6 +125,7 @@ export function ScheduleView() {
                 })}
               </div>
             ))}
+            </div>
           </div>
         </CardContent>
       </Card>

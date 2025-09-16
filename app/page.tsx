@@ -154,14 +154,16 @@ export default function Home() {
                     </Button>
                   </div>
 
-                  <DragDropContext onDragEnd={handleDragEnd} onDragStart={dndAnnouncements.onDragStart} onDragUpdate={dndAnnouncements.onDragUpdate}>
-                    <Droppable droppableId="semesters" type="semester" direction="horizontal">
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-                        >
+                  <div className="-mx-2 sm:mx-0">
+                    <div className="px-2 sm:px-0">
+                      <DragDropContext onDragEnd={handleDragEnd} onDragStart={dndAnnouncements.onDragStart} onDragUpdate={dndAnnouncements.onDragUpdate}>
+                        <Droppable droppableId="semesters" type="semester" direction="horizontal">
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+                            >
                           {semesters.map((semester, index) => (
                             <SemesterCard 
                               key={semester.id} 
@@ -189,10 +191,12 @@ export default function Home() {
                               </div>
                             </Button>
                           </motion.div>
-                        </div>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
+                            </div>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
