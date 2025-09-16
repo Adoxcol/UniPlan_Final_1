@@ -6,6 +6,7 @@ import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
+import { AuthPanel } from '@/components/AuthPanel';
 import { SemesterCard } from '@/components/SemesterCard';
 import { ScheduleView } from '@/components/ScheduleView';
 import { AddSemesterDialog } from '@/components/AddSemesterDialog';
@@ -103,7 +104,9 @@ export default function Home() {
       <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {!degree ? (
+        {!userId ? (
+          <AuthPanel />
+        ) : !degree ? (
           <EmptyState onSetupDegree={() => setShowDegreeSetup(true)} />
         ) : (
           <>
@@ -122,7 +125,7 @@ export default function Home() {
                     <div>
                       <h2 className="text-3xl font-bold">Weekly Schedule</h2>
                       <p className="text-muted-foreground mt-2">
-                        Visual overview of your active semester's schedule with conflict detection
+                        Visual overview of your active semester&rsquo;s schedule with conflict detection
                       </p>
                     </div>
                   </div>

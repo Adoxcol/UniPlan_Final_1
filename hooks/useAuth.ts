@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from '@/hooks/use-toast';
 
 export function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -28,7 +29,14 @@ export function useAuth() {
 
   const signUpWithEmail = async (email: string, password: string) => {
     if (!supabase) return { error: new Error('Supabase not configured') };
-    return supabase.auth.signUp({ email, password });
+    const res = await supabase.auth.signUp({ email, password });
+    if (!res.error) {
+      toast({
+        title: 'Check your email',
+        description: 'We sent you a confirmation link to complete sign up.',
+      });
+    }
+    return res;
   };
 
   const signOut = async () => {
