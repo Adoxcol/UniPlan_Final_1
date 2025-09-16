@@ -85,4 +85,6 @@ export interface AppState {
   saveData: () => void;
   exportToPDF: () => Promise<void>;
   reset: () => void;
+  syncFromSupabase: () => Promise<void>;
+  saveAllToSupabase: () => Promise<void>;
 }

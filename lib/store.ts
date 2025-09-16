@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AppState, Semester, Course, ScheduleConflict, TimeSlot } from './types';
 import { timeStringToMinutes } from './utils';
+import { supabase } from './supabaseClient';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -307,6 +308,87 @@ export const useAppStore = create<AppState>()(
         }
         
         pdf.save('uniplan-roadmap.pdf');
+      },
+
+      // Sync functions
+      syncFromSupabase: async () => {
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user.id;
+        if (!userId) return;
+        const [profiles, semestersRes, coursesRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+          supabase.from('semesters').select('*').eq('user_id', userId),
+          supabase.from('courses').select('*').eq('user_id', userId),
+        ]);
+        const profile = (profiles as any).data || null;
+        const semesters = (semestersRes as any).data || [];
+        const courses = (coursesRes as any).data || [];
+        const semestersWithCourses: Semester[] = semesters.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          year: s.year,
+          season: s.season,
+          isActive: s.is_active,
+          notes: s.notes ?? undefined,
+          courses: courses.filter((c: any) => c.semester_id === s.id).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            credits: c.credits,
+            daysOfWeek: c.days_of_week ?? undefined,
+            startTime: c.start_time ?? undefined,
+            endTime: c.end_time ?? undefined,
+            grade: c.grade ?? undefined,
+            color: c.color ?? undefined,
+            notes: c.notes ?? undefined,
+          })),
+        }));
+        set({
+          semesters: semestersWithCourses,
+          notes: profile?.notes ?? '',
+          degree: profile?.degree_name ? { name: profile.degree_name, totalCreditsRequired: profile.degree_total_credits ?? 0 } : null,
+        });
+      },
+
+      saveAllToSupabase: async () => {
+        if (!supabase) return;
+        const state = get();
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user.id;
+        if (!userId) return;
+        // upsert profile
+        await supabase.from('profiles').upsert({
+          user_id: userId,
+          notes: state.notes,
+          degree_name: state.degree?.name ?? null,
+          degree_total_credits: state.degree?.totalCreditsRequired ?? null,
+        });
+        // upsert semesters
+        const semestersPayload = state.semesters.map(s => ({
+          id: s.id,
+          user_id: userId,
+          name: s.name,
+          year: s.year,
+          season: s.season,
+          is_active: !!s.isActive,
+          notes: s.notes ?? null,
+        }));
+        await supabase.from('semesters').upsert(semestersPayload);
+        // upsert courses
+        const coursesPayload = state.semesters.flatMap(s => s.courses.map(c => ({
+          id: c.id,
+          user_id: userId,
+          semester_id: s.id,
+          name: c.name,
+          credits: c.credits,
+          days_of_week: c.daysOfWeek ?? null,
+          start_time: c.startTime ?? null,
+          end_time: c.endTime ?? null,
+          grade: c.grade ?? null,
+          color: c.color ?? null,
+          notes: c.notes ?? null,
+        })));
+        await supabase.from('courses').upsert(coursesPayload);
       },
 
       reset: () => set({

@@ -4,6 +4,7 @@ import { Moon, Sun, Calendar, Grid3X3, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { 
@@ -13,6 +14,7 @@ export function Header() {
     toggleScheduleView,
     exportToPDF 
   } = useAppStore();
+  const { userId, signInWithEmail, signOut } = useAuth();
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,6 +71,16 @@ export function Header() {
             )}
             <span className="sr-only">Toggle theme</span>
           </Button>
+
+          {userId ? (
+            <Button variant="default" size="sm" onClick={() => signOut()}>
+              Sign out
+            </Button>
+          ) : (
+            <Button variant="default" size="sm" onClick={() => signInWithEmail(prompt('Email')||'', prompt('Password')||'')}>
+              Sign in
+            </Button>
+          )}
         </div>
       </div>
     </header>

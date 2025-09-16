@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProgressSection } from '@/components/ProgressSection';
 import { DegreeSetupDialog } from '@/components/DegreeSetupDialog';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
   const [showAddSemester, setShowAddSemester] = useState(false);
@@ -27,6 +28,7 @@ export default function Home() {
     reorderSemesters, 
     reorderCourses 
   } = useAppStore();
+  const { userId } = useAuth();
 
   useEffect(() => {
     // Apply theme to document
@@ -36,6 +38,21 @@ export default function Home() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  // Load from Supabase on login
+  useEffect(() => {
+    if (!userId) return;
+    useAppStore.getState().syncFromSupabase();
+  }, [userId]);
+
+  // Debounced save to Supabase
+  useEffect(() => {
+    if (!userId) return;
+    const id = setTimeout(() => {
+      useAppStore.getState().saveAllToSupabase();
+    }, 500);
+    return () => clearTimeout(id);
+  }, [userId, semesters, degree]);
 
   // Keyboard shortcuts: A to add semester, Shift+A to open degree setup
   useEffect(() => {
