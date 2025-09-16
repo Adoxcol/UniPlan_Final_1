@@ -1,6 +1,6 @@
 'use client';
 
-import { GripVertical, MoreHorizontal, Edit3, Trash2, Calendar, CalendarCheck } from 'lucide-react';
+import { GripVertical, MoreHorizontal, Edit3, Trash2, Calendar, CalendarCheck, Share2 } from 'lucide-react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,7 @@ interface SemesterHeaderProps {
   totalCredits: number;
   onEdit: () => void;
   onDelete: () => void;
+  onShare: () => void;
 }
 
 export function SemesterHeader({
@@ -29,6 +30,7 @@ export function SemesterHeader({
   totalCredits,
   onEdit,
   onDelete,
+  onShare,
 }: SemesterHeaderProps) {
   const { setActiveSemester } = useAppStore();
 
@@ -77,6 +79,10 @@ export function SemesterHeader({
           <DropdownMenuItem onClick={onEdit}>
             <Edit3 className="h-4 w-4 mr-2" />
             Edit Semester
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onShare}>
+            <Share2 className="h-4 w-4 mr-2" />
+            Share Semester
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onDelete} className="text-destructive">
             <Trash2 className="h-4 w-4 mr-2" />

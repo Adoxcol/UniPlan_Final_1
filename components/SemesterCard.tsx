@@ -8,6 +8,7 @@ import { SemesterStats } from './SemesterStats';
 import { CourseList } from './CourseList';
 import { AddCourseDialog } from './AddCourseDialog';
 import { EditSemesterDialog } from './EditSemesterDialog';
+import { ShareSemesterDialog } from './ShareSemesterDialog';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import type { Semester } from '@/lib/types';
@@ -20,6 +21,7 @@ interface SemesterCardProps {
 function SemesterCardComponent({ semester, index }: SemesterCardProps) {
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditSemester, setShowEditSemester] = useState(false);
+  const [showShareSemester, setShowShareSemester] = useState(false);
   const { removeSemester, calculateSemesterGPA } = useAppStore();
 
   // Derive a stable accent color from the card index with dark mode support
@@ -87,6 +89,7 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
                 totalCredits={totalCredits}
                 onEdit={() => setShowEditSemester(true)}
                 onDelete={handleRemoveSemester}
+                onShare={() => setShowShareSemester(true)}
               />
               
               <SemesterStats
@@ -115,6 +118,12 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
             semester={semester}
             open={showEditSemester}
             onClose={() => setShowEditSemester(false)}
+          />
+          
+          <ShareSemesterDialog
+            semester={semester}
+            open={showShareSemester}
+            onClose={() => setShowShareSemester(false)}
           />
         </>
       )}

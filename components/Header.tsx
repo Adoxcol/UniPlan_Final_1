@@ -1,12 +1,24 @@
 'use client';
 
-import { Moon, Sun, Calendar, Grid3X3, Download, Database } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Moon, Sun, Calendar, Grid3X3, Download, Database, BookOpen, Library, Plus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTheme } from 'next-themes';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import { DataManagementDialog } from '@/components/DataManagementDialog';
+import { CreateTemplateDialog } from '@/components/CreateTemplateDialog';
+import { TemplateLibrary } from '@/components/TemplateLibrary';
+import { MyTemplates } from '@/components/MyTemplates';
+import Link from 'next/link';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
@@ -16,17 +28,34 @@ export function Header() {
     exportToPDF 
   } = useAppStore();
   const { userId, signInWithEmail, signOut } = useAuth();
+  
+  // Client-side mounting state to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false);
+  
+  // Template dialog states
+  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [showMyTemplates, setShowMyTemplates] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/90 dark:border-border/50">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3">
-            <img 
-              src="/logo.svg" 
-              alt="DegreePlan Logo" 
-              className="h-10 w-10" 
-            />
+            <svg 
+              width="40"
+              height="40"
+              viewBox="0 0 40 40"
+              className="h-10 w-10"
+              aria-label="DegreePlan Logo"
+            >
+              <rect width="40" height="40" rx="8" fill="currentColor" className="text-primary"/>
+              <path d="M12 14h16v2H12v-2zm0 4h16v2H12v-2zm0 4h12v2H12v-2z" fill="white"/>
+            </svg>
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text leading-tight">DegreePlan</h1>
               <div className="hidden md:block text-xs text-muted-foreground/80 dark:text-muted-foreground leading-tight">
@@ -72,21 +101,61 @@ export function Header() {
                 Data
               </Button>
             </DataManagementDialog>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Templates
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowCreateTemplate(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Template
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowMyTemplates(true)}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  My Templates
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowTemplateLibrary(true)}>
+                  <Library className="h-4 w-4 mr-2" />
+                  Browse Library
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-9 w-9 hover:bg-accent/50 dark:hover:bg-accent transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-            ) : (
-              <Moon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          {/* Theme toggle button - only render after mounting to avoid hydration mismatch */}
+          {mounted ? (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="h-9 w-9 hover:bg-accent/50 dark:hover:bg-accent transition-colors relative"
+            >
+              <Sun className="h-4 w-4 text-amber-500 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="h-4 w-4 text-slate-600 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          ) : (
+            // Placeholder button to maintain layout during SSR
+            <div className="h-9 w-9 border border-border rounded-md opacity-50" />
+          )}
+
+          {userId && (
+            <Link href="/profile">
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <User className="h-4 w-4" />
+                <span className="sr-only">Profile</span>
+              </Button>
+            </Link>
+          )}
 
           {userId ? (
             <Button variant="default" size="sm" onClick={() => signOut()}>
@@ -99,6 +168,26 @@ export function Header() {
           )}
         </div>
       </div>
+      
+      {/* Template Dialogs */}
+      <CreateTemplateDialog 
+        open={showCreateTemplate} 
+        onOpenChange={setShowCreateTemplate} 
+      />
+      
+      <TemplateLibrary 
+        open={showTemplateLibrary} 
+        onOpenChange={setShowTemplateLibrary} 
+      />
+      
+      <MyTemplates 
+        open={showMyTemplates} 
+        onOpenChange={setShowMyTemplates}
+        onCreateNew={() => {
+          setShowMyTemplates(false);
+          setShowCreateTemplate(true);
+        }}
+      />
     </header>
   );
 }

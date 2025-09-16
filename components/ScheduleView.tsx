@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { Calendar } from './ui/calendar';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TIME_SLOTS = [
@@ -48,7 +47,6 @@ export function ScheduleView() {
     <div className="space-y-6">
       {!activeSemester && (
         <Alert>
-          <Calendar className="h-4 w-4" />
           <AlertDescription>
             No active semester selected. Mark a semester as active to view its schedule.
           </AlertDescription>
