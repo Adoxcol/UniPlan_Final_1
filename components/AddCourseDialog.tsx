@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAppStore } from '@/lib/store';
+import { courseSchema, type CourseFormData } from '@/lib/validationSchemas';
+import { z } from 'zod';
 
 interface AddCourseDialogProps {
   semesterId: string;
@@ -35,6 +37,8 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [grade, setGrade] = useState<string>('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { addCourse } = useAppStore();
 
   const handleDayToggle = (day: string, checked: boolean) => {
@@ -45,29 +49,47 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    setIsSubmitting(true);
+    setErrors({});
 
-    const courseData = {
-      name,
-      credits,
-      ...(selectedDays.length > 0 && { daysOfWeek: selectedDays }),
-      ...(startTime && { startTime }),
-      ...(endTime && { endTime }),
-      ...(grade && { grade: parseFloat(grade) }),
-    };
+    try {
+      const courseData: CourseFormData = {
+        name: name.trim(),
+        credits,
+        ...(selectedDays.length > 0 && { daysOfWeek: selectedDays as ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] }),
+        ...(startTime && { startTime }),
+        ...(endTime && { endTime }),
+        ...(grade && grade !== '' && { grade: parseFloat(grade) }),
+      };
 
-    addCourse(semesterId, courseData);
-    
-    // Reset form
-    setName('');
-    setCredits(3);
-    setSelectedDays([]);
-    setStartTime('');
-    setEndTime('');
-    setGrade('');
-    onClose();
+      // Validate with Zod
+      const validatedData = courseSchema.parse(courseData);
+      
+      addCourse(semesterId, validatedData);
+      
+      // Reset form
+      setName('');
+      setCredits(3);
+      setSelectedDays([]);
+      setStartTime('');
+      setEndTime('');
+      setGrade('');
+      onClose();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -86,7 +108,9 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
+              className={errors.name ? 'border-red-500' : ''}
             />
+            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
 
           <div className="space-y-2">
@@ -95,10 +119,12 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
               id="credits"
               type="number"
               value={credits}
-              onChange={(e) => setCredits(parseInt(e.target.value))}
+              onChange={(e) => setCredits(parseInt(e.target.value) || 1)}
               min="1"
               max="6"
+              className={errors.credits ? 'border-red-500' : ''}
             />
+            {errors.credits && <p className="text-sm text-red-500">{errors.credits}</p>}
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -129,7 +155,9 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
+                className={errors.startTime ? 'border-red-500' : ''}
               />
+              {errors.startTime && <p className="text-sm text-red-500">{errors.startTime}</p>}
             </div>
 
             <div className="space-y-2">
@@ -139,7 +167,9 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
+                className={errors.endTime ? 'border-red-500' : ''}
               />
+              {errors.endTime && <p className="text-sm text-red-500">{errors.endTime}</p>}
             </div>
           </div>
 
@@ -168,8 +198,8 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim()}>
-              Add Course
+            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+              {isSubmitting ? 'Adding...' : 'Add Course'}
             </Button>
           </div>
         </form>

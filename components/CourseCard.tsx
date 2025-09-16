@@ -57,21 +57,21 @@ function CourseCardComponent({ course, semesterId }: CourseCardProps) {
 
   return (
     <>
-      <Card className="group hover:shadow-md transition-all duration-200">
+      <Card className="group hover:shadow-md dark:hover:shadow-lg transition-all duration-200 dark:bg-card/80 dark:border-border/50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <div 
-                className="w-1 h-12 rounded-full flex-shrink-0"
+                className="w-1 h-12 rounded-full flex-shrink-0 shadow-sm dark:shadow-none"
                 style={{ backgroundColor: course.color }}
               />
               
               <div className="min-w-0 flex-1">
-                <h4 className="font-semibold text-sm leading-tight mb-1">
+                <h4 className="font-semibold text-sm leading-tight mb-1 dark:text-foreground/95">
                   {course.name}
                 </h4>
                 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground/90">
                   <span>{course.credits} credits</span>
                   
                   {course.daysOfWeek && course.daysOfWeek.length > 0 && course.startTime && (
@@ -89,12 +89,12 @@ function CourseCardComponent({ course, semesterId }: CourseCardProps) {
             </div>
             
             <div className="flex items-center gap-2">
-              {course.grade !== undefined && (
+              {course.grade !== undefined && course.grade !== null && (
                 <Badge 
                   variant="secondary"
-                  className="text-xs font-bold"
+                  className="text-xs font-bold dark:bg-secondary/80 dark:text-secondary-foreground/95 dark:border-border/30"
                 >
-                  <Star className="h-3 w-3 mr-1" />
+                  <Star className="h-3 w-3 mr-1 text-amber-500 dark:text-amber-400" />
                   {gradeToLetter(course.grade)}
                 </Badge>
               )}

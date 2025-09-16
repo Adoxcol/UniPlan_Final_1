@@ -20,6 +20,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import type { Semester } from '@/lib/types';
+import { semesterSchema, type SemesterFormData } from '@/lib/validationSchemas';
+import { z } from 'zod';
 
 interface EditSemesterDialogProps {
   semester: Semester;
@@ -31,6 +33,8 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [season, setSeason] = useState<'Autumn' | 'Spring' | 'Summer'>('Autumn');
   const [notes, setNotes] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { updateSemester } = useAppStore();
 
   useEffect(() => {
@@ -41,18 +45,37 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
     }
   }, [semester]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrors({});
 
-    const updates = {
-      name: `${season} ${year}`,
-      year,
-      season,
-      notes,
-    };
+    try {
+      const semesterData: SemesterFormData = {
+        name: `${season} ${year}`,
+        year,
+        season,
+        notes,
+      };
 
-    updateSemester(semester.id, updates);
-    onClose();
+      // Validate with Zod
+      const validatedData = semesterSchema.parse(semesterData);
+      
+      updateSemester(semester.id, validatedData);
+      onClose();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,7 +90,7 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
             <div className="space-y-2">
               <Label htmlFor="season">Season</Label>
               <Select value={season} onValueChange={(v) => setSeason(v as 'Autumn' | 'Spring' | 'Summer')}>
-                <SelectTrigger>
+                <SelectTrigger className={errors.season ? 'border-red-500' : ''}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -76,6 +99,7 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
                   <SelectItem value="Summer">Summer</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.season && <p className="text-sm text-red-500">{errors.season}</p>}
             </div>
 
             <div className="space-y-2">
@@ -87,7 +111,9 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
                 onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
                 min="2020"
                 max="2030"
+                className={errors.year ? 'border-red-500' : ''}
               />
+              {errors.year && <p className="text-sm text-red-500">{errors.year}</p>}
             </div>
           </div>
 
@@ -99,15 +125,17 @@ export function EditSemesterDialog({ semester, open, onClose }: EditSemesterDial
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
+              className={errors.notes ? 'border-red-500' : ''}
             />
+            {errors.notes && <p className="text-sm text-red-500">{errors.notes}</p>}
           </div>
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
-              Save Changes
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>

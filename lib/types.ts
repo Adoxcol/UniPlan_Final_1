@@ -5,7 +5,7 @@ export interface Course {
   daysOfWeek?: string[];
   startTime?: string;
   endTime?: string;
-  grade?: number; // 0-4 GPA scale
+  grade?: number | null; // 0-4 GPA scale
   color?: string;
   notes?: string;
 }
@@ -42,11 +42,16 @@ export interface Schedule {
   };
 }
 
+export interface ActionHistoryItem {
+  type: string;
+  data: Record<string, any>;
+  timestamp: number;
+}
+
 export interface AppState {
   semesters: Semester[];
   currentSemester: string | null;
   notes: string;
-  theme: 'light' | 'dark';
   showScheduleView: boolean;
   selectedNoteScope: 'global' | 'semester' | 'course';
   selectedSemesterForNotes: string | null;
@@ -55,6 +60,10 @@ export interface AppState {
     name: string;
     totalCreditsRequired: number;
   } | null;
+  isLoading: boolean;
+  isSyncing: boolean;
+  actionHistory: ActionHistoryItem[];
+  historyIndex: number;
   
   // Actions
   addSemester: (semester: Omit<Semester, 'id' | 'courses'>) => void;
@@ -69,7 +78,6 @@ export interface AppState {
   
   setNotes: (notes: string) => void;
   setCurrentSemester: (id: string | null) => void;
-  toggleTheme: () => void;
   toggleScheduleView: () => void;
   setNoteScope: (scope: 'global' | 'semester' | 'course', semesterId?: string, courseId?: string) => void;
   setDegree: (degree: { name: string; totalCreditsRequired: number }) => void;
@@ -87,4 +95,9 @@ export interface AppState {
   reset: () => void;
   syncFromSupabase: () => Promise<void>;
   saveAllToSupabase: () => Promise<void>;
+  exportData: () => string;
+  importData: (jsonData: string) => { success: boolean; message: string };
+  saveToHistory: (action: string, data: Record<string, any>) => void;
+  undo: () => void;
+  redo: () => void;
 }

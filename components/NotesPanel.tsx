@@ -142,7 +142,7 @@ export function NotesPanel() {
                   )}
                 </div>
               </div>
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0">
+              <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'write' | 'preview')} className="flex-1 flex flex-col min-h-0">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="write">Write</TabsTrigger>
                   <TabsTrigger value="preview">Preview</TabsTrigger>

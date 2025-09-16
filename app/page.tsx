@@ -14,8 +14,13 @@ import { NotesPanel } from '@/components/NotesPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressSection } from '@/components/ProgressSection';
 import { DegreeSetupDialog } from '@/components/DegreeSetupDialog';
+import { SemesterSkeleton, ScheduleSkeleton, ProgressSkeleton } from '@/components/SkeletonLoaders';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useServiceWorker } from '@/hooks/useServiceWorker';
 
 export default function Home() {
   const [showAddSemester, setShowAddSemester] = useState(false);
@@ -24,21 +29,24 @@ export default function Home() {
   const { 
     semesters, 
     degree,
-    theme, 
     showScheduleView, 
     reorderSemesters, 
-    reorderCourses 
+    reorderCourses,
+    isLoading,
+    isSyncing 
   } = useAppStore();
   const { userId } = useAuth();
+  
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
+  
+  // Enable auto-save
+  useAutoSave();
+  
+  // Enable service worker
+  useServiceWorker();
 
-  useEffect(() => {
-    // Apply theme to document
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  // Theme is now handled by next-themes ThemeProvider
 
   // Load from Supabase on login
   useEffect(() => {
@@ -89,25 +97,39 @@ export default function Home() {
     movedEl?.focus();
   };
   const dndAnnouncements = {
-    onDragStart: (start: any) => {
+    onDragStart: (start: { type: string; draggableId: string }) => {
       const type = start.type === 'semester' ? 'semester' : 'course';
       setDndAnnouncement(`Started dragging ${type} item.`);
     },
-    onDragUpdate: (update: any) => {
+    onDragUpdate: (update: { destination?: { index: number } | null }) => {
       if (!update.destination) return;
       const col = update.destination.index + 1;
       setDndAnnouncement(`Moving to position ${col}.`);
     },
   } as const;
   return (
-    <div className="min-h-screen bg-background" id="uniplan-content">
-      <Header />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background" id="uniplan-content">
+        <Header />
       
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         {!userId ? (
           <AuthPanel />
         ) : !degree ? (
           <EmptyState onSetupDegree={() => setShowDegreeSetup(true)} />
+        ) : isLoading || isSyncing ? (
+          <>
+            <ProgressSkeleton />
+            {showScheduleView ? (
+              <ScheduleSkeleton />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+                <SemesterSkeleton />
+                <SemesterSkeleton />
+                <SemesterSkeleton />
+              </div>
+            )}
+          </>
         ) : (
           <>
             <ProgressSection />
@@ -215,6 +237,7 @@ export default function Home() {
         open={showDegreeSetup}
         onClose={() => setShowDegreeSetup(false)}
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

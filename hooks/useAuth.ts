@@ -16,7 +16,7 @@ export function useAuth() {
       setLoading(false);
     };
     init();
-    const { data: sub } = supabase?.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase?.auth.onAuthStateChange((_event: string, session: any) => {
       setUserId(session?.user.id ?? null);
     }) ?? { data: { subscription: { unsubscribe() {} } } };
     return () => { mounted = false; sub?.subscription?.unsubscribe?.(); };

@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AppState, Semester, Course, ScheduleConflict, TimeSlot } from './types';
+import type { AppState, Semester, Course, ScheduleConflict, TimeSlot, ActionHistoryItem } from './types';
 import { timeStringToMinutes } from './utils';
 import { supabase } from './supabaseClient';
+import { importDataSchema } from './validationSchemas';
+import { z } from 'zod';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -17,50 +19,86 @@ export const useAppStore = create<AppState>()(
       semesters: [],
       currentSemester: null,
       notes: '',
-      theme: 'light',
       showScheduleView: false,
       selectedNoteScope: 'global',
       selectedSemesterForNotes: null,
       selectedCourseForNotes: null,
       degree: null,
+      isLoading: false,
+      isSyncing: false,
+      actionHistory: [],
+      historyIndex: -1,
 
       addSemester: (semesterData) => {
+        const state = get();
         const newSemester: Semester = {
           ...semesterData,
           id: generateId(),
           courses: [],
         };
-        set((state) => ({
-          semesters: [...state.semesters, newSemester],
-        }));
-      },
-
-      removeSemester: (id) => {
-        set((state) => ({
-          semesters: state.semesters.filter((s) => s.id !== id),
-          currentSemester: state.currentSemester === id ? null : state.currentSemester,
-        }));
-      },
-
-      updateSemester: (id, updates) => {
-        set((state) => ({
-          semesters: state.semesters.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-          ),
-        }));
-      },
-
-      reorderSemesters: (startIndex, endIndex) => {
-        set((state) => {
-          const result = Array.from(state.semesters);
-          const [removed] = result.splice(startIndex, 1);
-          result.splice(endIndex, 0, removed);
-          return { semesters: result };
+        const newSemesters = [...state.semesters, newSemester];
+        
+        // Save to history
+        get().saveToHistory('ADD_SEMESTER', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({
+          semesters: newSemesters,
+          currentSemester: newSemester.id,
         });
       },
 
+      removeSemester: (id) => {
+        const state = get();
+        const newSemesters = state.semesters.filter((s) => s.id !== id);
+        
+        // Save to history
+        get().saveToHistory('DELETE_SEMESTER', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({
+          semesters: newSemesters,
+          currentSemester: state.currentSemester === id ? null : state.currentSemester,
+        });
+      },
+
+      updateSemester: (id, updates) => {
+        const state = get();
+        const newSemesters = state.semesters.map((s) =>
+          s.id === id ? { ...s, ...updates } : s
+        );
+        
+        // Save to history
+        get().saveToHistory('UPDATE_SEMESTER', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({ semesters: newSemesters });
+      },
+
+      reorderSemesters: (startIndex, endIndex) => {
+        const state = get();
+        const result = Array.from(state.semesters);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        
+        // Save to history
+        get().saveToHistory('REORDER_SEMESTERS', {
+          semesters: state.semesters,
+          newSemesters: result
+        });
+        
+        set({ semesters: result });
+      },
+
       addCourse: (semesterId, courseData) => {
-        const colorIndex = get().semesters
+        const state = get();
+        const colorIndex = state.semesters
           .find(s => s.id === semesterId)?.courses.length || 0;
         
         const newCourse: Course = {
@@ -69,63 +107,87 @@ export const useAppStore = create<AppState>()(
           color: courseColors[colorIndex % courseColors.length],
         };
 
-        set((state) => ({
-          semesters: state.semesters.map((s) =>
-            s.id === semesterId
-              ? { ...s, courses: [...s.courses, newCourse] }
-              : s
-          ),
-        }));
+        const newSemesters = state.semesters.map((s) =>
+          s.id === semesterId
+            ? { ...s, courses: [...s.courses, newCourse] }
+            : s
+        );
+        
+        // Save to history
+        get().saveToHistory('ADD_COURSE', {
+          semesters: state.semesters,
+          newSemesters
+        });
+
+        set({ semesters: newSemesters });
       },
 
       removeCourse: (semesterId, courseId) => {
-        set((state) => ({
-          semesters: state.semesters.map((s) =>
-            s.id === semesterId
-              ? { ...s, courses: s.courses.filter((c) => c.id !== courseId) }
-              : s
-          ),
-        }));
+        const state = get();
+        const newSemesters = state.semesters.map((s) =>
+          s.id === semesterId
+            ? { ...s, courses: s.courses.filter((c) => c.id !== courseId) }
+            : s
+        );
+        
+        // Save to history
+        get().saveToHistory('DELETE_COURSE', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({ semesters: newSemesters });
       },
 
       updateCourse: (semesterId, courseId, updates) => {
-        set((state) => ({
-          semesters: state.semesters.map((s) =>
-            s.id === semesterId
-              ? {
-                  ...s,
-                  courses: s.courses.map((c) =>
-                    c.id === courseId ? { ...c, ...updates } : c
-                  ),
-                }
-              : s
-          ),
-        }));
+        const state = get();
+        const newSemesters = state.semesters.map((s) =>
+          s.id === semesterId
+            ? {
+                ...s,
+                courses: s.courses.map((c) =>
+                  c.id === courseId ? { ...c, ...updates } : c
+                ),
+              }
+            : s
+        );
+        
+        // Save to history
+        get().saveToHistory('UPDATE_COURSE', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({ semesters: newSemesters });
       },
 
       reorderCourses: (semesterId, startIndex, endIndex) => {
-        set((state) => ({
-          semesters: state.semesters.map((s) =>
-            s.id === semesterId
-              ? {
-                  ...s,
-                  courses: (() => {
-                    const result = Array.from(s.courses);
-                    const [removed] = result.splice(startIndex, 1);
-                    result.splice(endIndex, 0, removed);
-                    return result;
-                  })(),
-                }
-              : s
-          ),
-        }));
+        const state = get();
+        const newSemesters = state.semesters.map((s) =>
+          s.id === semesterId
+            ? {
+                ...s,
+                courses: (() => {
+                  const result = Array.from(s.courses);
+                  const [removed] = result.splice(startIndex, 1);
+                  result.splice(endIndex, 0, removed);
+                  return result;
+                })(),
+              }
+            : s
+        );
+        
+        // Save to history
+        get().saveToHistory('REORDER_COURSES', {
+          semesters: state.semesters,
+          newSemesters
+        });
+        
+        set({ semesters: newSemesters });
       },
 
       setNotes: (notes) => set({ notes }),
       setCurrentSemester: (id) => set({ currentSemester: id }),
-      toggleTheme: () => set((state) => ({ 
-        theme: state.theme === 'light' ? 'dark' : 'light' 
-      })),
       toggleScheduleView: () => set((state) => ({ 
         showScheduleView: !state.showScheduleView 
       })),
@@ -312,18 +374,20 @@ export const useAppStore = create<AppState>()(
 
       // Sync functions
       syncFromSupabase: async () => {
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user.id;
+          if (!supabase) return;
+          const currentState = get();
+          set({ isSyncing: true, isLoading: currentState.semesters.length === 0 });
+          const { data: { session } } = await supabase.auth.getSession();
+          const userId = session?.user.id;
         if (!userId) return;
         const [profiles, semestersRes, coursesRes] = await Promise.all([
           supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
           supabase.from('semesters').select('*').eq('user_id', userId),
           supabase.from('courses').select('*').eq('user_id', userId),
         ]);
-        const profile = (profiles as any).data || null;
-        const semesters = (semestersRes as any).data || [];
-        const courses = (coursesRes as any).data || [];
+        const profile = profiles.data || null;
+        const semesters = semestersRes.data || [];
+        const courses = coursesRes.data || [];
         const semestersWithCourses: Semester[] = semesters.map((s: any) => ({
           id: s.id,
           name: s.name,
@@ -346,12 +410,15 @@ export const useAppStore = create<AppState>()(
         set({
           semesters: semestersWithCourses,
           notes: profile?.notes ?? '',
-          degree: profile?.degree_name ? { name: profile.degree_name, totalCreditsRequired: profile.degree_total_credits ?? 0 } : null,
-        });
+            degree: profile?.degree_name ? { name: profile.degree_name, totalCreditsRequired: profile.degree_total_credits ?? 0 } : null,
+            isSyncing: false,
+            isLoading: false,
+          });
       },
 
       saveAllToSupabase: async () => {
         if (!supabase) return;
+        set({ isSyncing: true });
         const state = get();
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user.id;
@@ -363,8 +430,8 @@ export const useAppStore = create<AppState>()(
           supabase.from('courses').select('id').eq('user_id', userId),
         ]);
         
-        const existingSemesters = (existingSemestersRes as any).data || [];
-        const existingCourses = (existingCoursesRes as any).data || [];
+        const existingSemesters = existingSemestersRes.data || [];
+        const existingCourses = existingCoursesRes.data || [];
         
         // Get current IDs
         const currentSemesterIds = state.semesters.map(s => s.id);
@@ -373,11 +440,11 @@ export const useAppStore = create<AppState>()(
         // Find IDs to delete
         const semesterIdsToDelete = existingSemesters
           .filter((s: any) => !currentSemesterIds.includes(s.id))
-          .map((s: any) => s.id);
+        .map((s: any) => s.id);
           
         const courseIdsToDelete = existingCourses
           .filter((c: any) => !currentCourseIds.includes(c.id))
-          .map((c: any) => c.id);
+        .map((c: any) => c.id);
         
         // Delete removed items
         if (courseIdsToDelete.length > 0) {
@@ -427,18 +494,146 @@ export const useAppStore = create<AppState>()(
           notes: c.notes ?? null,
         })));
         await supabase.from('courses').upsert(coursesPayload);
+        set({ isSyncing: false });
+      },
+
+      // Action history methods
+      saveToHistory: (action: string, data: Record<string, any>) => {
+        const state = get();
+        const newAction: ActionHistoryItem = {
+          type: action,
+          data: JSON.parse(JSON.stringify(data)),
+          timestamp: Date.now()
+        };
+        
+        // Remove any actions after current index (when undoing then doing new action)
+        const newHistory = state.actionHistory.slice(0, state.historyIndex + 1);
+        newHistory.push(newAction);
+        
+        // Keep only last 50 actions
+        const trimmedHistory = newHistory.slice(-50);
+        
+        set({
+          actionHistory: trimmedHistory,
+          historyIndex: trimmedHistory.length - 1
+        });
+      },
+
+      undo: () => {
+        const state = get();
+        if (state.historyIndex <= 0) return;
+        
+        const previousAction = state.actionHistory[state.historyIndex - 1];
+        if (previousAction) {
+          // Restore previous state based on action type
+          switch (previousAction.type) {
+            case 'ADD_SEMESTER':
+            case 'DELETE_SEMESTER':
+            case 'UPDATE_SEMESTER':
+            case 'REORDER_SEMESTERS':
+              set({ semesters: previousAction.data.semesters });
+              break;
+            case 'ADD_COURSE':
+            case 'DELETE_COURSE':
+            case 'UPDATE_COURSE':
+            case 'REORDER_COURSES':
+              set({ semesters: previousAction.data.semesters });
+              break;
+          }
+          set({ historyIndex: state.historyIndex - 1 });
+        }
+      },
+
+      redo: () => {
+        const state = get();
+        if (state.historyIndex >= state.actionHistory.length - 1) return;
+        
+        const nextAction = state.actionHistory[state.historyIndex + 1];
+        if (nextAction) {
+          // Apply next action
+          switch (nextAction.type) {
+            case 'ADD_SEMESTER':
+            case 'DELETE_SEMESTER':
+            case 'UPDATE_SEMESTER':
+            case 'REORDER_SEMESTERS':
+              set({ semesters: nextAction.data.newSemesters });
+              break;
+            case 'ADD_COURSE':
+            case 'DELETE_COURSE':
+            case 'UPDATE_COURSE':
+            case 'REORDER_COURSES':
+              set({ semesters: nextAction.data.newSemesters });
+              break;
+          }
+          set({ historyIndex: state.historyIndex + 1 });
+        }
+      },
+
+      // Data export/import methods
+      exportData: () => {
+        const state = get();
+        const exportData = {
+          semesters: state.semesters,
+          notes: state.notes,
+          degree: state.degree,
+          exportDate: new Date().toISOString(),
+          version: '1.0'
+        };
+        
+        return JSON.stringify(exportData, null, 2);
+      },
+
+      importData: (jsonData: string) => {
+        try {
+          const data = JSON.parse(jsonData);
+          
+          // Validate the data structure with Zod
+          const validatedData = importDataSchema.parse(data);
+          
+          // Save current state to history before importing
+          const currentState = get();
+          get().saveToHistory('IMPORT_DATA', {
+            semesters: currentState.semesters,
+            notes: currentState.notes,
+            degree: currentState.degree
+          });
+          
+          set({
+            semesters: validatedData.semesters || [],
+            notes: validatedData.notes || '',
+            degree: validatedData.degree || null,
+            currentSemester: validatedData.semesters?.[0]?.id || null
+          });
+          
+          return { success: true, message: 'Data imported successfully!' };
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+            return { 
+              success: false, 
+              message: `Import failed - Invalid data format: ${errorMessages}` 
+            };
+          }
+          return { 
+            success: false, 
+            message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+          };
+        }
       },
 
       reset: () => set({
         semesters: [],
         currentSemester: null,
         notes: '',
-        theme: 'light',
         showScheduleView: false,
         selectedNoteScope: 'global',
         selectedSemesterForNotes: null,
         selectedCourseForNotes: null,
         degree: null,
+        isLoading: false,
+        isSyncing: false,
+        actionHistory: [],
+        historyIndex: -1,
       }),
     }),
     {

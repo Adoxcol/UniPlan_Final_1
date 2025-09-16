@@ -92,7 +92,7 @@ const config: Config = {
 const plugin = require('tailwindcss/plugin');
 config.plugins = config.plugins || [];
 config.plugins.push(
-  plugin(function({ addComponents, theme }: any) {
+  plugin(function({ addComponents, theme }: { addComponents: Function; theme: Function }) {
     addComponents({
       '.variant-dashed': {
         borderStyle: 'dashed',

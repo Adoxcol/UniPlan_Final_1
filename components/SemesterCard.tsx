@@ -22,10 +22,12 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
   const [showEditSemester, setShowEditSemester] = useState(false);
   const { removeSemester, calculateSemesterGPA } = useAppStore();
 
-  // Derive a stable accent color from the card index
+  // Derive a stable accent color from the card index with dark mode support
   const hue = (index * 65) % 360;
   const accentColor = `hsl(${hue}, 70%, 45%)`;
+  const accentColorDark = `hsl(${hue}, 60%, 55%)`;
   const tintColor = `hsla(${hue}, 90%, 45%, 0.08)`;
+  const tintColorDark = `hsla(${hue}, 70%, 55%, 0.12)`;
 
   const semesterGPA = calculateSemesterGPA(semester.id);
   const totalCredits = semester.courses.reduce((sum, course) => sum + course.credits, 0);
@@ -57,18 +59,26 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
           <Card 
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`h-fit group hover:shadow-lg transition-all duration-300 ${
-              snapshot.isDragging ? 'rotate-1 scale-105 shadow-2xl' : ''
-            }`}
+            className={`h-fit group hover:shadow-lg dark:hover:shadow-xl transition-all duration-300 border-2 ${
+              snapshot.isDragging ? 'rotate-1 scale-105 shadow-2xl dark:shadow-2xl' : ''
+            } dark:bg-card/50 dark:backdrop-blur-sm`}
             style={{
               borderColor: accentColor,
-              backgroundImage: `linear-gradient(180deg, ${tintColor}, transparent 140px)`
-            }}
+              backgroundImage: `linear-gradient(180deg, ${tintColor}, transparent 140px)`,
+              // Dark mode styles applied via CSS custom properties
+              '--accent-color': accentColor,
+              '--accent-color-dark': accentColorDark,
+              '--tint-color': tintColor,
+              '--tint-color-dark': tintColorDark,
+            } as React.CSSProperties & { [key: string]: string }}
             tabIndex={0}
             data-draggable-id={semester.id}
             data-semester-id={semester.id}
           >
-            <div style={{ height: 4, backgroundColor: accentColor }} />
+            <div 
+              className="h-1 dark:opacity-90" 
+              style={{ backgroundColor: accentColor }} 
+            />
             <CardHeader className="pb-4" {...provided.dragHandleProps}>
               <SemesterHeader
                 semester={semester}
