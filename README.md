@@ -1,8 +1,8 @@
-# 🎓 UniPlan - Your Personal University Roadmap
+# 🎓 DegreePlan - Your Personal University Roadmap
 
 > **Transform your academic journey into a beautifully organized, interactive roadmap that adapts to your goals and keeps you on track for graduation.**
 
-UniPlan is a modern, intuitive course planning application designed specifically for university students who want to take control of their academic journey. Built with Next.js 15, TypeScript, and powered by Supabase, it combines powerful planning tools with a delightful user experience.
+DegreePlan is a modern, intuitive course planning application designed specifically for university students who want to take control of their academic journey. Built with Next.js 15, TypeScript, and powered by Supabase, it combines powerful planning tools with a delightful user experience.
 
 ![UniPlan Demo](https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=UniPlan+Demo)
 
