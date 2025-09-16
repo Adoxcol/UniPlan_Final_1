@@ -356,6 +356,42 @@ export const useAppStore = create<AppState>()(
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user.id;
         if (!userId) return;
+        
+        // Fetch existing data to handle deletions
+        const [existingSemestersRes, existingCoursesRes] = await Promise.all([
+          supabase.from('semesters').select('id').eq('user_id', userId),
+          supabase.from('courses').select('id').eq('user_id', userId),
+        ]);
+        
+        const existingSemesters = (existingSemestersRes as any).data || [];
+        const existingCourses = (existingCoursesRes as any).data || [];
+        
+        // Get current IDs
+        const currentSemesterIds = state.semesters.map(s => s.id);
+        const currentCourseIds = state.semesters.flatMap(s => s.courses.map(c => c.id));
+        
+        // Find IDs to delete
+        const semesterIdsToDelete = existingSemesters
+          .filter((s: any) => !currentSemesterIds.includes(s.id))
+          .map((s: any) => s.id);
+          
+        const courseIdsToDelete = existingCourses
+          .filter((c: any) => !currentCourseIds.includes(c.id))
+          .map((c: any) => c.id);
+        
+        // Delete removed items
+        if (courseIdsToDelete.length > 0) {
+          await supabase.from('courses')
+            .delete()
+            .in('id', courseIdsToDelete);
+        }
+        
+        if (semesterIdsToDelete.length > 0) {
+          await supabase.from('semesters')
+            .delete()
+            .in('id', semesterIdsToDelete);
+        }
+        
         // upsert profile
         await supabase.from('profiles').upsert({
           user_id: userId,
@@ -363,6 +399,7 @@ export const useAppStore = create<AppState>()(
           degree_name: state.degree?.name ?? null,
           degree_total_credits: state.degree?.totalCreditsRequired ?? null,
         });
+        
         // upsert semesters
         const semestersPayload = state.semesters.map(s => ({
           id: s.id,
@@ -374,6 +411,7 @@ export const useAppStore = create<AppState>()(
           notes: s.notes ?? null,
         }));
         await supabase.from('semesters').upsert(semestersPayload);
+        
         // upsert courses
         const coursesPayload = state.semesters.flatMap(s => s.courses.map(c => ({
           id: c.id,

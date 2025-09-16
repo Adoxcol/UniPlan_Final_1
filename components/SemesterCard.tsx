@@ -9,6 +9,7 @@ import { CourseList } from './CourseList';
 import { AddCourseDialog } from './AddCourseDialog';
 import { EditSemesterDialog } from './EditSemesterDialog';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 import type { Semester } from '@/lib/types';
 
 interface SemesterCardProps {
@@ -33,9 +34,20 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
     .reduce((sum, course) => sum + course.credits, 0);
 
   const handleRemoveSemester = () => {
-    if (window.confirm('Are you sure you want to delete this semester and all its courses?')) {
-      removeSemester(semester.id);
-    }
+    toast("Delete semester?", {
+      description: "This will delete the semester and all its courses.",
+      action: {
+        label: "Delete",
+        onClick: () => {
+          removeSemester(semester.id);
+          toast.success("Semester deleted");
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
+      }
+    });
   };
 
   return (

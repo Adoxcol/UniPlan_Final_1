@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { EditCourseDialog } from './EditCourseDialog';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 import type { Course } from '@/lib/types';
 
 interface CourseCardProps {
@@ -38,9 +39,20 @@ function CourseCardComponent({ course, semesterId }: CourseCardProps) {
   const { removeCourse } = useAppStore();
 
   const handleRemoveCourse = () => {
-    if (window.confirm('Are you sure you want to remove this course?')) {
-      removeCourse(semesterId, course.id);
-    }
+    toast("Delete course?", {
+      description: "Are you sure you want to remove this course?",
+      action: {
+        label: "Delete",
+        onClick: () => {
+          removeCourse(semesterId, course.id);
+          toast.success("Course deleted");
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
+      }
+    });
   };
 
   return (
