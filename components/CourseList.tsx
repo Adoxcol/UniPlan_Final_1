@@ -54,6 +54,7 @@ function CourseListComponent({ courses, semesterId, onAddCourse, accentColor }: 
             variant="dashed"
             className="w-full h-12 border-dashed border-2 hover:border-primary/50 hover:bg-accent/50 transition-colors"
             onClick={onAddCourse}
+            aria-label="Add course"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Course

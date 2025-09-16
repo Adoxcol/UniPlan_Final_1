@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SemesterHeader } from './SemesterHeader';
@@ -52,6 +52,9 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
               borderColor: accentColor,
               backgroundImage: `linear-gradient(180deg, ${tintColor}, transparent 140px)`
             }}
+            tabIndex={0}
+            data-draggable-id={semester.id}
+            data-semester-id={semester.id}
           >
             <div style={{ height: 4, backgroundColor: accentColor }} />
             <CardHeader className="pb-4" {...provided.dragHandleProps}>

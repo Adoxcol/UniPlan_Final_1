@@ -37,6 +37,24 @@ export default function Home() {
     }
   }, [theme]);
 
+  // Keyboard shortcuts: A to add semester, Shift+A to open degree setup
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target && (e.target as HTMLElement).tagName === 'INPUT') return;
+      if (e.target && (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+      if (e.key.toLowerCase() === 'a' && !e.shiftKey) {
+        e.preventDefault();
+        setShowAddSemester(true);
+      }
+      if (e.key.toLowerCase() === 'a' && e.shiftKey) {
+        e.preventDefault();
+        setShowDegreeSetup(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -48,6 +66,9 @@ export default function Home() {
       const semesterId = source.droppableId.replace('semester-', '');
       reorderCourses(semesterId, source.index, destination.index);
     }
+    // Focus management after DnD
+    const movedEl = document.querySelector<HTMLElement>(`[data-draggable-id="${result.draggableId}"]`);
+    movedEl?.focus();
   };
   const dndAnnouncements = {
     onDragStart: (start: any) => {
