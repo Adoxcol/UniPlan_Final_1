@@ -253,7 +253,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Have questions or need help? We're here for you:
 
-- 📧 **Email**: support@uniplan.app
+- 📧 **Email**: mahfuzurrrahmannn@gmail.com
 - 💬 **Discord**: [Join our community](https://discord.gg/uniplan)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/uniplan/issues)
 - 📖 **Documentation**: [Full Documentation](https://docs.uniplan.app)
