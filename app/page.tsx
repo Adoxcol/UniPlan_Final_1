@@ -14,6 +14,7 @@ import { NotesPanel } from '@/components/NotesPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressSection } from '@/components/ProgressSection';
 import { DegreeSetupDialog } from '@/components/DegreeSetupDialog';
+import { DeleteDegreePlanDialog } from '@/components/DeleteDegreePlanDialog';
 import { SemesterSkeleton, ScheduleSkeleton, ProgressSkeleton } from '@/components/SkeletonLoaders';
 import { SavingIndicator } from '@/components/SavingIndicator';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -240,6 +241,15 @@ export default function Home() {
                         <Plus className="h-4 w-4 mr-2" />
                         Add Semester
                       </Button>
+                      
+                      <DeleteDegreePlanDialog 
+                        size="sm"
+                        variant="outline"
+                        onDeleted={() => {
+                          // Refresh the page state after deletion
+                          useAppStore.getState().syncFromSupabase();
+                        }}
+                      />
                       
                       <Button 
                         onClick={async () => {

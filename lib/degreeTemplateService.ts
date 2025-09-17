@@ -281,9 +281,58 @@ export class DegreeTemplateService {
   }
 
   /**
+   * Delete all degree plan data for the current user
+   */
+  static async deleteAllPlanData(): Promise<void> {
+    if (!supabase) throw new Error('Supabase client not configured');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User must be authenticated');
+
+    console.log('Deleting all degree plan data...');
+    
+    // First delete all courses (due to foreign key constraints)
+    const { error: coursesDeleteError } = await supabase
+      .from('courses')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (coursesDeleteError) {
+      console.error('Error deleting courses:', coursesDeleteError);
+      throw new Error('Failed to delete courses. Please try again.');
+    }
+    
+    // Then delete all semesters
+    const { error: semestersDeleteError } = await supabase
+      .from('semesters')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (semestersDeleteError) {
+      console.error('Error deleting semesters:', semestersDeleteError);
+      throw new Error('Failed to delete semesters. Please try again.');
+    }
+    
+    // Clear degree information from profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        degree_name: null,
+        degree_total_credits: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+    
+    if (profileError) {
+      console.warn('Warning: Could not clear degree info from profile:', profileError);
+    }
+    
+    console.log('Successfully deleted all degree plan data');
+  }
+
+  /**
    * Apply a degree template to user's current plan
    */
-  static async applyTemplate(templateId: string): Promise<void> {
+  static async applyTemplate(templateId: string, options: { override?: boolean } = { override: true }): Promise<void> {
     if (!supabase) throw new Error('Supabase client not configured');
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User must be authenticated');
@@ -307,11 +356,34 @@ export class DegreeTemplateService {
         updated_at: new Date().toISOString()
       });
 
-    // Clear existing semesters (optional - could be a user choice)
-    await supabase
-      .from('semesters')
-      .delete()
-      .eq('user_id', user.id);
+    // Clear existing data if override is enabled (default behavior)
+    if (options.override) {
+      console.log('Clearing existing semesters and courses...');
+      
+      // First delete all courses (due to foreign key constraints)
+      const { error: coursesDeleteError } = await supabase
+        .from('courses')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (coursesDeleteError) {
+        console.error('Error deleting courses:', coursesDeleteError);
+        throw new Error('Failed to clear existing courses. Please try again.');
+      }
+      
+      // Then delete all semesters
+      const { error: semestersDeleteError } = await supabase
+        .from('semesters')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (semestersDeleteError) {
+        console.error('Error deleting semesters:', semestersDeleteError);
+        throw new Error('Failed to clear existing semesters. Please try again.');
+      }
+      
+      console.log('Successfully cleared all existing data');
+    }
 
     // Create semesters from template
     // Convert relative academic years to calendar years
@@ -319,8 +391,6 @@ export class DegreeTemplateService {
     const baseYear = Math.max(2020, Math.min(currentYear, 2030)); // Ensure base year is within valid range
     
     for (const templateSemester of template.semesters) {
-      const semesterId = generateId();
-      
       // Convert relative academic year (1-8) to calendar year
       // Academic year 1 starts at baseYear, year 2 at baseYear+1, etc.
       const calendarYear = baseYear + (templateSemester.year - 1);
@@ -328,39 +398,154 @@ export class DegreeTemplateService {
       // Ensure the calculated year is within the database constraint range (2020-2030)
       const validYear = Math.max(2020, Math.min(calendarYear, 2030));
       
-      const { data: semesterData, error: semesterError } = await supabase
-        .from('semesters')
-        .insert({
-          id: semesterId,
-          user_id: user.id,
-          name: templateSemester.name,
-          season: templateSemester.season,
-          year: validYear,
-          notes: templateSemester.notes,
-          is_active: false
-        })
-        .select()
-        .single();
+      let semesterData;
+      
+      if (options.override) {
+        // When overriding, create new semesters (existing ones should have been deleted)
+        // But add a safety check in case deletion didn't work properly
+        const { data: existingSemester, error: checkError } = await supabase
+          .from('semesters')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .eq('year', validYear)
+          .eq('season', templateSemester.season)
+          .single();
 
-      if (semesterError) throw semesterError;
+        if (checkError && checkError.code !== 'PGRST116') {
+          // PGRST116 is "not found" error, which is expected if no existing semester
+          throw checkError;
+        }
+
+        if (existingSemester) {
+          // This shouldn't happen in override mode, but use existing if found
+          semesterData = existingSemester;
+          console.log(`Warning: Found existing semester in override mode, using it: ${existingSemester.name} (${templateSemester.season} ${validYear})`);
+        } else {
+          // Create new semester as expected
+          const semesterId = generateId();
+          const { data: newSemesterData, error: semesterError } = await supabase
+            .from('semesters')
+            .insert({
+              id: semesterId,
+              user_id: user.id,
+              name: templateSemester.name,
+              season: templateSemester.season,
+              year: validYear,
+              notes: templateSemester.notes,
+              is_active: false
+            })
+            .select()
+            .single();
+
+          if (semesterError) {
+            console.error('Error creating semester:', semesterError);
+            throw new Error(`Failed to create semester "${templateSemester.name}" for ${templateSemester.season} ${validYear}. This may be due to a duplicate semester.`);
+          }
+          semesterData = newSemesterData;
+          console.log(`Created new semester: ${templateSemester.name} (${templateSemester.season} ${validYear})`);
+        }
+      } else {
+        // When merging, check for existing semesters
+        const { data: existingSemester, error: checkError } = await supabase
+          .from('semesters')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .eq('year', validYear)
+          .eq('season', templateSemester.season)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          // PGRST116 is "not found" error, which is expected if no existing semester
+          throw checkError;
+        }
+
+        if (existingSemester) {
+          // Use existing semester
+          semesterData = existingSemester;
+          console.log(`Using existing semester: ${existingSemester.name} (${templateSemester.season} ${validYear})`);
+        } else {
+          // Create new semester
+          const semesterId = generateId();
+          const { data: newSemesterData, error: semesterError } = await supabase
+            .from('semesters')
+            .insert({
+              id: semesterId,
+              user_id: user.id,
+              name: templateSemester.name,
+              season: templateSemester.season,
+              year: validYear,
+              notes: templateSemester.notes,
+              is_active: false
+            })
+            .select()
+            .single();
+
+          if (semesterError) throw semesterError;
+          semesterData = newSemesterData;
+          console.log(`Created new semester: ${templateSemester.name} (${templateSemester.season} ${validYear})`);
+        }
+      }
 
       // Add courses from template
       if (templateSemester.courses && templateSemester.courses.length > 0) {
-        const coursesData = templateSemester.courses.map(templateCourse => ({
-          id: generateId(),
-          semester_id: semesterData.id,
-          user_id: user.id,
-          name: templateCourse.name,
-          credits: templateCourse.credits,
-          notes: templateCourse.description || undefined,
-          color: this.getRandomCourseColor()
-        }));
+        if (options.override) {
+          // When overriding, add all courses (no existing courses to check)
+          const coursesData = templateSemester.courses.map(templateCourse => ({
+            id: generateId(),
+            semester_id: semesterData.id,
+            user_id: user.id,
+            name: templateCourse.name,
+            credits: templateCourse.credits,
+            notes: templateCourse.description || undefined,
+            color: this.getRandomCourseColor()
+          }));
 
-        const { error: coursesError } = await supabase
-          .from('courses')
-          .insert(coursesData);
+          const { error: coursesError } = await supabase
+            .from('courses')
+            .insert(coursesData);
 
-        if (coursesError) throw coursesError;
+          if (coursesError) throw coursesError;
+          
+          console.log(`Added ${templateSemester.courses.length} courses to semester ${semesterData.name}`);
+        } else {
+          // When merging, check for existing courses to avoid duplicates
+          const { data: existingCourses, error: existingCoursesError } = await supabase
+            .from('courses')
+            .select('name')
+            .eq('semester_id', semesterData.id)
+            .eq('user_id', user.id);
+
+          if (existingCoursesError) throw existingCoursesError;
+
+          const existingCourseNames = new Set(existingCourses?.map(course => course.name.toLowerCase()) || []);
+          
+          // Filter out courses that already exist in the semester
+          const newCourses = templateSemester.courses.filter(templateCourse => 
+            !existingCourseNames.has(templateCourse.name.toLowerCase())
+          );
+
+          if (newCourses.length > 0) {
+            const coursesData = newCourses.map(templateCourse => ({
+              id: generateId(),
+              semester_id: semesterData.id,
+              user_id: user.id,
+              name: templateCourse.name,
+              credits: templateCourse.credits,
+              notes: templateCourse.description || undefined,
+              color: this.getRandomCourseColor()
+            }));
+
+            const { error: coursesError } = await supabase
+              .from('courses')
+              .insert(coursesData);
+
+            if (coursesError) throw coursesError;
+            
+            console.log(`Added ${newCourses.length} new courses to semester ${semesterData.name}`);
+          } else {
+            console.log(`No new courses to add to semester ${semesterData.name} (all courses already exist)`);
+          }
+        }
       }
     }
   }

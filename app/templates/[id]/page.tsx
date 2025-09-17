@@ -66,17 +66,97 @@ export default function TemplatePage() {
     
     setIsApplying(true);
     try {
-      await DegreeTemplateService.applyTemplate(template.id);
+      // Always override (delete existing plan) when applying templates
+      await DegreeTemplateService.applyTemplate(template.id, { override: true });
       // Sync data from database to update the UI
       await useAppStore.getState().syncFromSupabase();
-      toast.success(`Applied "${template.name}" template successfully!`);
-      router.push('/');
-    } catch (error) {
+      toast.success(`Applied "${template.name}" template successfully!`, {
+        description: 'Your semester plan has been replaced with the template.'
+      });
+      router.push('/planner');
+    } catch (error: any) {
       console.error('Error applying template:', error);
-      toast.error('Failed to apply template. Please try again.');
+      
+      // Provide specific error messages based on the error type
+      let errorMessage = 'Failed to apply template. Please try again.';
+      let errorDescription = '';
+      
+      if (error?.message) {
+        if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+          errorMessage = 'Duplicate semester detected';
+          errorDescription = 'This template contains semesters that already exist in your plan. Please try refreshing and applying again.';
+        } else if (error.message.includes('Failed to clear existing')) {
+          errorMessage = 'Could not clear existing data';
+          errorDescription = 'Please try refreshing the page and applying the template again.';
+        } else if (error.message.includes('Template not found')) {
+          errorMessage = 'Template not found';
+          errorDescription = 'This template may have been deleted or is no longer available.';
+        } else if (error.message.includes('User must be authenticated')) {
+          errorMessage = 'Authentication required';
+          errorDescription = 'Please sign in to apply templates.';
+        } else {
+          errorDescription = error.message;
+        }
+      }
+      
+      toast.error(errorMessage, {
+        description: errorDescription,
+        duration: 5000
+      });
     } finally {
       setIsApplying(false);
     }
+  };
+
+  const showApplyConfirmation = () => {
+    const hasExistingData = useAppStore.getState().semesters.length > 0;
+    
+    if (!hasExistingData) {
+      // No existing data, just apply normally
+      handleApplyTemplate();
+      return;
+    }
+
+    // Show Sonner confirmation dialog for existing data
+    toast.custom((t) => (
+      <div className="bg-background border border-border rounded-lg p-4 shadow-lg max-w-md">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
+            <GraduationCap className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground">
+              Replace Existing Plan?
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Applying &quot;{template?.name}&quot; will <strong>permanently delete</strong> your current semester plan and replace it with this template.
+            </p>
+            <div className="flex gap-2 mt-3">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  toast.dismiss(t);
+                  handleApplyTemplate();
+                }}
+              >
+                Replace Plan
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => toast.dismiss(t)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center'
+    });
   };
 
   const handleCopyLink = async () => {
@@ -259,7 +339,7 @@ export default function TemplatePage() {
               <Button 
                 size="lg" 
                 className="w-full" 
-                onClick={handleApplyTemplate}
+                onClick={showApplyConfirmation}
                 disabled={isApplying}
               >
                 {isApplying ? (

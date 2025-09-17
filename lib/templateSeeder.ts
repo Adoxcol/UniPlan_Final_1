@@ -277,4 +277,151 @@ export class TemplateSeeder {
 
     await this.createOfficialTemplate(bscseTemplate);
   }
+
+  /**
+   * Seed NSU (North South University) template - 130 credits, 4 years, 12 semesters
+   */
+  static async seedNSUTemplate(): Promise<void> {
+    const nsuTemplate: UniversityTemplateData = {
+      name: "Bachelor of Science in Computer Science and Engineering - NSU",
+      description: "A comprehensive 4-year undergraduate program from North South University with 130 credits spread across 12 semesters (3 semesters per year). Covers core computer science subjects, mathematics, engineering fundamentals, and specialized electives.",
+      university: "North South University",
+      major: "Computer Science and Engineering",
+      totalCredits: 130,
+      durationYears: 4,
+      tags: ["Computer Science", "Engineering", "NSU", "North South University", "Bangladesh", "130 Credits"],
+      semesters: [
+        {
+          name: "1st Semester",
+          year: 1,
+          season: "Spring",
+          courses: [
+            { name: "English", code: "ENG102", credits: 3 },
+            { name: "Business", code: "BUS112", credits: 3 },
+            { name: "Mathematics", code: "MIS107", credits: 3 }
+          ]
+        },
+        {
+          name: "2nd Semester", 
+          year: 1,
+          season: "Summer",
+          courses: [
+            { name: "Economics", code: "ECO101", credits: 3 },
+            { name: "English", code: "ENG103", credits: 3, prerequisites: "ENG102" },
+            { name: "Humanities", code: "Humanities-1", credits: 3 },
+            { name: "Social Science", code: "Social Science-1", credits: 3 }
+          ]
+        },
+        {
+          name: "3rd Semester",
+          year: 1,
+          season: "Autumn",
+          courses: [
+            { name: "Business", code: "BUS172", credits: 3 },
+            { name: "Economics", code: "ECO104", credits: 3, prerequisites: "ECO101" },
+            { name: "English", code: "ENG105", credits: 3, prerequisites: "ENG103" },
+            { name: "Humanities", code: "Humanities-2", credits: 3 }
+          ]
+        },
+        {
+          name: "4th Semester",
+          year: 2,
+          season: "Spring",
+          courses: [
+            { name: "Accounting", code: "ACT201", credits: 3 },
+            { name: "Business/Engineering/Chemistry", code: "BEN205/ENG115/CHN101", credits: 3 },
+            { name: "Marketing", code: "MKT202", credits: 3 },
+            { name: "Business", code: "BUS173", credits: 3 }
+          ]
+        },
+        {
+          name: "5th Semester",
+          year: 2,
+          season: "Summer",
+          courses: [
+            { name: "Accounting", code: "ACT202", credits: 3, prerequisites: "ACT201" },
+            { name: "Finance", code: "FIN254", credits: 3 },
+            { name: "Marketing", code: "MGT212", credits: 3 },
+            { name: "Science", code: "Science-1", credits: 3 }
+          ]
+        },
+        {
+          name: "6th Semester",
+          year: 2,
+          season: "Autumn",
+          courses: [
+            { name: "Business", code: "BUS251", credits: 3 },
+            { name: "Business", code: "BUS135", credits: 3 },
+            { name: "International Business", code: "IUB372", credits: 3 },
+            { name: "Science", code: "Science-2", credits: 3 }
+          ]
+        },
+        {
+          name: "7th Semester",
+          year: 3,
+          season: "Spring",
+          courses: [
+            { name: "Major", code: "Major-1", credits: 3 },
+            { name: "Management", code: "MGT314", credits: 3 },
+            { name: "Management Information Systems", code: "MIS207", credits: 3 },
+            { name: "Science", code: "Science-3", credits: 3 }
+          ]
+        },
+        {
+          name: "8th Semester",
+          year: 3,
+          season: "Summer",
+          courses: [
+            { name: "Major", code: "Major-2", credits: 3, prerequisites: "Major-1" },
+            { name: "Free Elective", code: "Free Elective-1", credits: 3 },
+            { name: "Law", code: "LAW200", credits: 3 },
+            { name: "Management", code: "MGT351", credits: 3 }
+          ]
+        },
+        {
+          name: "9th Semester",
+          year: 3,
+          season: "Autumn",
+          courses: [
+            { name: "Major", code: "Major-3", credits: 3, prerequisites: "Major-2" },
+            { name: "Free Elective", code: "Free Elective-2", credits: 3 },
+            { name: "Management", code: "MGT368", credits: 3 },
+            { name: "Science", code: "Science-3", credits: 3 }
+          ]
+        },
+        {
+          name: "10th Semester",
+          year: 4,
+          season: "Spring",
+          courses: [
+            { name: "Major", code: "Major-4", credits: 3, prerequisites: "Major-3" },
+            { name: "Major Elective", code: "Major Elective-1", credits: 3 },
+            { name: "Free Elective", code: "Free Elective-2", credits: 3 },
+            { name: "Humanities", code: "Humanities-3", credits: 3 }
+          ]
+        },
+        {
+          name: "11th Semester",
+          year: 4,
+          season: "Summer",
+          courses: [
+            { name: "Social Science", code: "Social Science-2", credits: 3 },
+            { name: "Major Elective", code: "Major Elective-2", credits: 3 },
+            { name: "General Education Elective", code: "GED Elective", credits: 3 },
+            { name: "Management", code: "MGT489", credits: 3 }
+          ]
+        },
+        {
+          name: "12th Semester",
+          year: 4,
+          season: "Autumn",
+          courses: [
+            { name: "Business", code: "BUS498", credits: 3 }
+          ]
+        }
+      ]
+    };
+
+    await this.createOfficialTemplate(nsuTemplate);
+  }
 }

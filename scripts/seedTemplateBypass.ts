@@ -184,174 +184,170 @@ async function seedTemplateBypass(templateData: UniversityTemplateData, systemUs
 
 async function main() {
   try {
-    // First, clear existing templates to avoid duplicates
-    console.log('Clearing existing templates...')
-    await adminClient.from('degree_templates').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    
     // Create or get system user
     console.log('Setting up system user...')
     const systemUserId = await createSystemUser()
     console.log('✓ System user ready:', systemUserId)
 
-    // Define the complete BSCSE template following the exact curriculum
-    const bscseTemplate: UniversityTemplateData = {
-      name: "Bachelor of Science in Computer Science and Engineering (BSCSE)",
-      description: "A comprehensive 4-year undergraduate program in Computer Science and Engineering following UGC approved curriculum. Effective from Spring 2018.",
+    // Define the complete BBA template following the exact curriculum
+    const bbaTemplate: UniversityTemplateData = {
+      name: "Bachelor of Business Administration (BBA)",
+      description: "A comprehensive 4-year undergraduate program in Business Administration from North South University. The program provides students with a solid foundation in business principles and practices.",
       university: "North South University",
-      major: "Computer Science and Engineering",
-      totalCredits: 130, // Total from curriculum
+      major: "Business Administration",
+      totalCredits: 132, // Corrected total: 132 credits across 12 semesters
       durationYears: 4,
-      tags: ["Computer Science", "Engineering", "Programming", "Software Development", "Bangladesh", "UGC"],
+      tags: ["Business", "Administration", "Management", "Finance", "Marketing", "Bangladesh", "NSU"],
       semesters: [
-        // 1st Semester - 8 credits
+        // 1st Semester (Year 1, Autumn)
         {
-          name: "1st Semester",
+          name: "Semester 1 (Year 1)",
           year: 1,
           season: "Autumn",
           courses: [
-            { name: "ENG102: Introduction to Composition", code: "ENG102", credits: 3 },
-            { name: "MAT116: Pre-Calculus", code: "MAT116", credits: 0 },
-            { name: "EEE154: Engineering Drawing", code: "EEE154", credits: 1 },
-            { name: "CSE115+CL: Programming Language I", code: "CSE115+CL", credits: 4 }
+            { name: "ENG102: English Composition II", code: "ENG102", credits: 3 },
+            { name: "BUS112: Introduction to Business", code: "BUS112", credits: 3 },
+            { name: "MIS107: Management Information Systems", code: "MIS107", credits: 3 }
           ]
         },
-        // 2nd Semester - 12 credits
+        // 2nd Semester (Year 1, Spring)
         {
-          name: "2nd Semester",
+          name: "Semester 2 (Year 1)",
           year: 1,
           season: "Spring",
           courses: [
-            { name: "ENG103: Intermediate Composition", code: "ENG103", credits: 3, prerequisites: "ENG102/Waiver" },
-            { name: "MAT120: Calculus I", code: "MAT120", credits: 3, prerequisites: "MAT116" },
-            { name: "MAT125: Linear Algebra", code: "MAT125", credits: 3, prerequisites: "MAT116" },
-            { name: "CSE173: Discrete Mathematics", code: "CSE173", credits: 3, prerequisites: "CSE115" }
+            { name: "ECO101: Principles of Economics I", code: "ECO101", credits: 3 },
+            { name: "ENG103: English Composition III", code: "ENG103", credits: 3 },
+            { name: "Humanities - 1", code: "HUM101", credits: 3 },
+            { name: "Social Science - 1", code: "SOC101", credits: 3 }
           ]
         },
-        // 3rd Semester - 14 credits
+        // 3rd Semester (Year 1, Summer)
         {
-          name: "3rd Semester",
+          name: "Semester 3 (Year 1)",
+          year: 1,
+          season: "Summer",
+          courses: [
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "ECO104: Microeconomics", code: "ECO104", credits: 3 },
+            { name: "ENG105: Advanced English", code: "ENG105", credits: 3 },
+            { name: "Humanities - 2", code: "HUM102", credits: 3 }
+          ]
+        },
+        // 4th Semester (Year 2, Autumn)
+        {
+          name: "Semester 4 (Year 2)",
           year: 2,
           season: "Autumn",
           courses: [
-            { name: "ENG111: Public Speaking", code: "ENG111", credits: 3 },
-            { name: "MAT130: Calculus II", code: "MAT130", credits: 3, prerequisites: "MAT120" },
-            { name: "PHY107+CL: Physics I", code: "PHY107+CL", credits: 4, prerequisites: "MAT120" },
-            { name: "CSE215 + CL: Programming Language II", code: "CSE215+CL", credits: 4, prerequisites: "CSE173" }
+            { name: "ACT201: Principles of Accounting I", code: "ACT201", credits: 3 },
+            { name: "BEN205: Bengali/ENG115/CHN101", code: "BEN205", credits: 3 },
+            { name: "MKT202: Principles of Marketing", code: "MKT202", credits: 3 },
+            { name: "BUS173: Business Mathematics", code: "BUS173", credits: 3 }
           ]
         },
-        // 4th Semester - 13 credits
+        // 5th Semester (Year 2, Spring)
         {
-          name: "4th Semester",
+          name: "Semester 5 (Year 2)",
           year: 2,
           season: "Spring",
           courses: [
-            { name: "PHI104: Introduction to Ethics", code: "PHI104", credits: 3 },
-            { name: "MAT250: Calculus III", code: "MAT250", credits: 3, prerequisites: "MAT130" },
-            { name: "PHY108+CL: Physics II", code: "PHY108+CL", credits: 4, prerequisites: "MAT130 and PHY107" },
-            { name: "CSE225 + IL: Data Structures and Algorithm", code: "CSE225+IL", credits: 3, prerequisites: "CSE215" }
+            { name: "ACT202: Principles of Accounting II", code: "ACT202", credits: 3 },
+            { name: "FIN254: Business Finance", code: "FIN254", credits: 3 },
+            { name: "MGT212: Principles of Management", code: "MGT212", credits: 3 },
+            { name: "Science - 1", code: "SCI101", credits: 3 }
           ]
         },
-        // 5th Semester - 13 credits
+        // 6th Semester (Year 2, Summer)
         {
-          name: "5th Semester",
+          name: "Semester 6 (Year 2)",
+          year: 2,
+          season: "Summer",
+          courses: [
+            { name: "BUS251: Business Law", code: "BUS251", credits: 3 },
+            { name: "BUS135: Business Communication", code: "BUS135", credits: 3 },
+            { name: "INB372: International Business", code: "INB372", credits: 3 },
+            { name: "Science - 2", code: "SCI102", credits: 3 }
+          ]
+        },
+        // 7th Semester (Year 3, Autumn)
+        {
+          name: "Semester 7 (Year 3)",
           year: 3,
           season: "Autumn",
           courses: [
-            { name: "BEN205: Bengali Language & Literature", code: "BEN205", credits: 3, prerequisites: "ENG103" },
-            { name: "MAT350: Engineering Mathematics", code: "MAT350", credits: 3, prerequisites: "MAT250" },
-            { name: "EEE141 + CL: Electric Circuit I", code: "EEE141+CL", credits: 4, prerequisites: "PHY107 and MAT120" },
-            { name: "CSE231 + IL: Digital Logic Design", code: "CSE231+IL", credits: 3, prerequisites: "CSE173" }
+            { name: "Major - 1", code: "MAJ101", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
+            { name: "MIS207: Database Management", code: "MIS207", credits: 3 },
+            { name: "Science - 3", code: "SCI103", credits: 3 }
           ]
         },
-        // 6th Semester - 7 credits
+        // 8th Semester (Year 3, Spring)
         {
-          name: "6th Semester",
+          name: "Semester 8 (Year 3)",
           year: 3,
           season: "Spring",
           courses: [
-            { name: "HIS102: Introduction to World Civilization", code: "HIS102", credits: 3 },
-            { name: "MAT361: Probability and Statistics", code: "MAT361", credits: 3, prerequisites: "MAT250" },
-            { name: "CSE299: Junior Design", code: "CSE299", credits: 1, prerequisites: "60 credits completed" }
+            { name: "Major - 2", code: "MAJ102", credits: 3 },
+            { name: "Free Elective - 1", code: "ELE101", credits: 3 },
+            { name: "Business Law II", code: "LAW200", credits: 3 },
+            { name: "MGT351: Strategic Management", code: "MGT351", credits: 3 }
           ]
         },
-        // 7th Semester - 14 credits
+        // 9th Semester (Year 3, Summer)
         {
-          name: "7th Semester",
+          name: "Semester 9 (Year 3)",
+          year: 3,
+          season: "Summer",
+          courses: [
+            { name: "Major - 3", code: "MAJ103", credits: 3 },
+            { name: "Free Elective - 2", code: "ELE102", credits: 3 },
+            { name: "MGT368: Operations Management", code: "MGT368", credits: 3 },
+            { name: "Science - 4", code: "SCI104", credits: 3 }
+          ]
+        },
+        // 10th Semester (Year 4, Autumn)
+        {
+          name: "Semester 10 (Year 4)",
           year: 4,
           season: "Autumn",
           courses: [
-            { name: "HIS103: Emergence of Bangladesh", code: "HIS103", credits: 3 },
-            { name: "CHE101+CL: Chemistry I", code: "CHE101+CL", credits: 4 },
-            { name: "EEE111 + CL: Analog Electronics I", code: "EEE111+CL", credits: 4, prerequisites: "MAT350" },
-            { name: "CSE332: Computer Organization and Architecture", code: "CSE332", credits: 3, prerequisites: "EEE141" },
-            { name: "POL101/POL104: Introduction to Political Science/Governance", code: "POL101", credits: 3, prerequisites: "CSE231" }
+            { name: "Major - 4", code: "MAJ104", credits: 3 },
+            { name: "Major Elective - 1", code: "MAJE101", credits: 3 },
+            { name: "Free Elective - 3", code: "ELE103", credits: 3 },
+            { name: "Humanities - 3", code: "HUM103", credits: 3 }
           ]
         },
-        // 8th Semester - 12 credits
+        // 11th Semester (Year 4, Spring)
         {
-          name: "8th Semester",
+          name: "Semester 11 (Year 4)",
           year: 4,
           season: "Spring",
           courses: [
-            { name: "CSE311 + IL: Database Systems", code: "CSE311+IL", credits: 3, prerequisites: "CSE225" },
-            { name: "CSE323: Operating Systems Design", code: "CSE323", credits: 3, prerequisites: "CSE332" },
-            { name: "CSE373: Design and Analysis of Algorithms", code: "CSE373", credits: 3, prerequisites: "CSE225 and MAT361" },
-            { name: "ECO101/ECO104: Introduction to Microeconomics/Macroeconomics", code: "ECO101", credits: 3 }
+            { name: "Social Science - 2", code: "SOC102", credits: 3 },
+            { name: "Major Elective - 2", code: "MAJE102", credits: 3 },
+            { name: "GED Elective", code: "GED101", credits: 3 },
+            { name: "MGT489: Business Capstone", code: "MGT489", credits: 3 }
           ]
         },
-        // 9th Semester - 13 credits
+        // 12th Semester (Year 4, Summer)
         {
-          name: "9th Semester",
-          year: 5,
-          season: "Autumn",
+          name: "Semester 12 (Year 4)",
+          year: 4,
+          season: "Summer",
           courses: [
-            { name: "BIO103+CL: Biology I", code: "BIO103+CL", credits: 4 },
-            { name: "CSE327: Software Engineering", code: "CSE327", credits: 3, prerequisites: "CSE311" },
-            { name: "CSE331: Microprocessor Interfacing and Embedded System + IL", code: "CSE331+IL", credits: 3, prerequisites: "CSE323" },
-            { name: "SOC101/ANT101/ENV203(GEO205): Introduction to Sociology/Anthropology/Bangladesh Geography", code: "SOC101", credits: 3 }
-          ]
-        },
-        // 10th Semester - 9 credits
-        {
-          name: "10th Semester",
-          year: 5,
-          season: "Spring",
-          courses: [
-            { name: "CSE425: Concepts of Programming Language", code: "CSE425", credits: 3, prerequisites: "CSE327" },
-            { name: "EEE452: Engineering Economics", code: "EEE452", credits: 3 },
-            { name: "ELECT1", code: "ELECT1", credits: 3 }
-          ]
-        },
-        // 11th Semester - 7.5 credits
-        {
-          name: "11th Semester",
-          year: 6,
-          season: "Autumn",
-          courses: [
-            { name: "ELECT2", code: "ELECT2", credits: 3 },
-            { name: "CSE499A: Senior Design I", code: "CSE499A", credits: 1.5, prerequisites: "100 credits completed" },
-            { name: "ELECT3", code: "ELECT3", credits: 3 }
-          ]
-        },
-        // 12th Semester - 7.5 credits
-        {
-          name: "12th Semester",
-          year: 6,
-          season: "Spring",
-          courses: [
-            { name: "OPEN ELECT", code: "OPEN_ELECT", credits: 3 },
-            { name: "CSE499B: Senior Design II", code: "CSE499B", credits: 1.5, prerequisites: "CSE499A" }
+            { name: "BUS498: Business Internship", code: "BUS498", credits: 3 }
           ]
         }
       ]
     };
 
     // Seed the template
-    const templateId = await seedTemplateBypass(bscseTemplate, systemUserId)
-    console.log('\n🎉 BSCSE template seeded successfully!')
+    const templateId = await seedTemplateBypass(bbaTemplate, systemUserId)
+    console.log('\n🎉 BBA template seeded successfully!')
     console.log('Template ID:', templateId)
-    console.log('Total semesters:', bscseTemplate.semesters.length)
-    console.log('Total courses:', bscseTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
+    console.log('Total semesters:', bbaTemplate.semesters.length)
+    console.log('Total courses:', bbaTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
 
   } catch (error) {
     console.error('Main process failed:', error)
