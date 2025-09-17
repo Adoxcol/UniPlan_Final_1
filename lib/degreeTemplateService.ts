@@ -398,7 +398,7 @@ export class DegreeTemplateService {
       // Ensure the calculated year is within the database constraint range (2020-2030)
       const validYear = Math.max(2020, Math.min(calendarYear, 2030));
       
-      let semesterData;
+      let semesterData: { id: string; name: string; [key: string]: any };
       
       if (options.override) {
         // When overriding, create new semesters (existing ones should have been deleted)

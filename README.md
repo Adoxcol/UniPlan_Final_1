@@ -1,266 +1,353 @@
-# 🎓 DegreePlan - Your Personal University Roadmap
+# UniPlan - Advanced Academic Planning Platform
 
-> **Transform your academic journey into a beautifully organized, interactive roadmap that adapts to your goals and keeps you on track for graduation.**
+A comprehensive, feature-rich academic planning application that empowers students to organize their degree requirements, plan semesters, track academic progress, and collaborate with peers through intelligent features and seamless cloud synchronization.
 
-DegreePlan is a modern, intuitive course planning application designed specifically for university students who want to take control of their academic journey. Built with Next.js 15, TypeScript, and powered by Supabase, it combines powerful planning tools with a delightful user experience.
+## ✨ Core Features
 
-![UniPlan Demo](https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=UniPlan+Demo)
+### 🎯 Intelligent Semester Planning
+- **Advanced Drag & Drop Interface**: Intuitive course management with visual feedback and smooth animations
+- **Smart Conflict Detection**: Real-time detection of scheduling conflicts with detailed conflict resolution
+- **Dynamic Credit Tracking**: Live calculation of semester and cumulative credit hours
+- **Comprehensive GPA Calculator**: Automatic GPA calculation with grade tracking and trend analysis
+- **Semester Templates**: Pre-built semester templates for common degree programs
 
-## ✨ Features
+### 📅 Advanced Schedule Management
+- **Interactive Schedule View**: Clean, calendar-style schedule visualization with time slot management
+- **Multi-Semester Scheduling**: View and manage schedules across multiple semesters
+- **Conflict Resolution System**: Smart detection, highlighting, and suggestions for resolving time conflicts
+- **Schedule Export**: Export schedules to PDF and calendar formats
+- **Responsive Design**: Fully optimized for desktop, tablet, and mobile devices
 
-### 🗓️ **Smart Semester Planning**
-- **Drag & Drop Interface**: Effortlessly organize semesters and courses with intuitive drag-and-drop functionality
-- **Visual Course Cards**: Each course gets a unique color and displays all essential information at a glance
-- **Credit Tracking**: Automatic calculation of semester and cumulative credits
-- **GPA Calculator**: Real-time GPA calculations for individual semesters and overall academic performance
+### 📝 Multi-Level Notes System
+- **Hierarchical Notes**: Global, semester-specific, and course-specific note organization
+- **Rich Text Editor**: Enhanced note-taking with formatting, lists, and markdown support
+- **Auto-Save Technology**: Automatic saving of notes and changes with conflict resolution
+- **Advanced Search**: Full-text search across all notes with filtering and tagging
+- **Note Sharing**: Share notes with classmates and study groups
 
-### 📅 **Intelligent Schedule Management**
-- **Weekly Schedule View**: Visualize your course schedule in a clean, calendar-style layout
-- **Conflict Detection**: Automatic detection and highlighting of scheduling conflicts
-- **Time Slot Management**: Easy course scheduling with time conflict prevention
-- **Multi-View Support**: Switch between grid view and schedule view instantly
+### 🎓 Comprehensive Progress Tracking
+- **Visual Progress Dashboard**: Interactive progress bars and completion tracking
+- **Degree Requirements Engine**: Track completion of major, minor, and general education requirements
+- **Credit Analysis**: Detailed breakdown of completed, in-progress, and remaining credits
+- **Graduation Projection**: AI-powered graduation timeline based on current progress and course availability
+- **Academic Performance Analytics**: GPA trends, credit distribution, and performance insights
 
-### 📝 **Smart Notes System**
-- **Multi-Scope Notes**: Take notes at global, semester, or course level
-- **Markdown Support**: Rich text formatting with markdown syntax
-- **Live Preview**: Real-time markdown preview as you type
-- **Smart Suggestions**: Contextual note suggestions based on your current scope
-- **Auto-Save**: Never lose your thoughts with automatic saving
+### 🔄 Enterprise-Grade Sync & Collaboration
+- **Real-Time Cloud Sync**: Secure data synchronization across all devices via Supabase
+- **Offline-First Architecture**: Continue working offline with automatic sync when reconnected
+- **Collaborative Planning**: Share degree plans with advisors, peers, and family
+- **Version Control**: Complete revision history with rollback capabilities
+- **Data Portability**: JSON-based export/import with migration tools
 
-### 🎯 **Degree Progress Tracking**
-- **Degree Setup**: Define your degree requirements and total credit goals
-- **Progress Visualization**: Beautiful progress bars showing completion status
-- **Credit Analytics**: Detailed breakdown of completed vs. remaining credits
-- **Graduation Timeline**: Visual roadmap to your graduation date
+### 🎨 Modern UI/UX Excellence
+- **Adaptive Design System**: Modern, intuitive interface with smooth micro-interactions
+- **Theme Customization**: Dark/light mode with custom color schemes
+- **Accessibility First**: WCAG 2.1 AA compliant with full keyboard navigation and screen reader support
+- **Performance Optimized**: Sub-second loading with efficient state management and lazy loading
+- **Mobile-First**: Progressive Web App (PWA) with offline capabilities
 
-### 🔐 **Secure Cloud Sync**
-- **User Authentication**: Secure login with Supabase Auth
-- **Real-time Sync**: Your data syncs across all devices automatically
-- **Offline Support**: Continue planning even without internet connection
-- **Data Privacy**: Your academic data is encrypted and secure
+### ⚡ Power User Features
+- **Comprehensive Keyboard Shortcuts**: Quick actions for efficient navigation and management
+- **Bulk Operations**: Multi-select and batch operations for courses and semesters
+- **Advanced Undo/Redo**: Complete action history with granular undo/redo functionality
+- **Smart Filtering**: Filter courses by credits, grades, time slots, and custom criteria
+- **Advanced Export Options**: PDF reports, CSV data, and calendar integration
+- **Template Library**: Community-driven template sharing and discovery
 
-### 🎨 **Beautiful User Experience**
-- **Dark/Light Mode**: Toggle between themes to match your preference
-- **Responsive Design**: Perfect experience on desktop, tablet, and mobile
-- **Smooth Animations**: Delightful micro-interactions powered by Framer Motion
-- **Accessibility**: Built with accessibility best practices in mind
-- **PDF Export**: Export your academic roadmap as a beautiful PDF
-
-### ⚡ **Power User Features**
-- **Keyboard Shortcuts**: 
-  - `A` - Add new semester
-  - `Shift + A` - Open degree setup
-- **Bulk Operations**: Manage multiple courses and semesters efficiently
-- **Data Export**: Export your data for backup or transfer
-- **Advanced Filtering**: Find courses and semesters quickly
+### 👨‍💼 Administrative Features
+- **Admin Dashboard**: Comprehensive system monitoring and user management
+- **User Analytics**: Detailed usage statistics and performance metrics
+- **Template Management**: Create and manage official degree templates
+- **System Health Monitoring**: Real-time system performance and error tracking
+- **Bulk User Operations**: Administrative tools for user management and data migration
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+- **Node.js 18+** and npm/yarn
+- **Supabase account** (for cloud sync and collaboration features)
+- **Modern web browser** (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
 
-- **Node.js** 18.0 or later
-- **npm** or **yarn** package manager
-- **Supabase Account** (for cloud sync and authentication)
+### Quick Installation
 
-### Installation
-
-1. **Clone the repository**
+1. **Clone and Setup**
    ```bash
-   git clone https://github.com/yourusername/uniplan.git
+   git clone <repository-url>
    cd uniplan
-   ```
-
-2. **Install dependencies**
-   ```bash
    npm install
-   # or
-   yarn install
    ```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Edit `.env.local` and add your Supabase credentials:
+2. **Environment Configuration**
+   Create `.env.local` in the root directory:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
 
-4. **Set up Supabase database**
-   
-   Run the SQL schema in your Supabase dashboard:
+3. **Database Setup**
    ```bash
-   # Copy the contents of supabase/schema.sql
-   # and run it in your Supabase SQL editor
+   # Initialize Supabase (if using Supabase CLI)
+   npx supabase init
+   npx supabase start
+   
+   # Or manually run the SQL migrations in your Supabase dashboard
    ```
 
-5. **Start the development server**
+4. **Development Server**
    ```bash
    npm run dev
-   # or
-   yarn dev
+   # Application available at http://localhost:3000
    ```
 
-6. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000) to see UniPlan in action!
+5. **Optional: Seed Sample Data**
+   ```bash
+   npm run seed                    # Seed degree templates
+   npm run admin:create           # Create first admin user
+   npm run admin:seed             # Seed admin data
+   ```
 
-## 🏗️ Project Structure
+## 📁 Project Architecture
 
 ```
 uniplan/
-├── app/                    # Next.js 15 App Router
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Main application page
-├── components/            # React components
-│   ├── ui/               # Reusable UI components (shadcn/ui)
-│   ├── Header.tsx        # Application header
-│   ├── SemesterCard.tsx  # Semester management
-│   ├── ScheduleView.tsx  # Schedule visualization
-│   ├── NotesPanel.tsx    # Smart notes system
-│   └── ...               # Other feature components
-├── hooks/                # Custom React hooks
-│   ├── useAuth.ts        # Authentication logic
-│   └── use-toast.ts      # Toast notifications
-├── lib/                  # Core utilities and logic
-│   ├── store.ts          # Zustand state management
-│   ├── types.ts          # TypeScript type definitions
-│   ├── utils.ts          # Utility functions
-│   └── supabaseClient.ts # Supabase configuration
-├── supabase/             # Database schema
-│   └── schema.sql        # Database table definitions
-└── tests/                # Test files
-    ├── setup.ts          # Test configuration
-    └── store.test.ts     # Store logic tests
+├── app/                          # Next.js 14 App Router
+│   ├── page.tsx                 # Main application interface
+│   ├── admin/                   # Administrative dashboard
+│   │   └── page.tsx            # Admin panel with analytics
+│   └── globals.css             # Global styles and CSS variables
+├── components/                   # React component library
+│   ├── ui/                      # Reusable UI primitives (40+ components)
+│   ├── AdminDashboard.tsx       # Administrative interface
+│   ├── AuthPanel.tsx           # Authentication system
+│   ├── SemesterCard.tsx        # Semester management interface
+│   ├── CourseCard.tsx          # Course management interface
+│   ├── ScheduleView.tsx        # Calendar schedule visualization
+│   ├── ProgressSection.tsx     # Academic progress tracking
+│   ├── NotesPanel.tsx          # Multi-level notes system
+│   ├── TemplateLibrary.tsx     # Degree template browser
+│   ├── UserManagement.tsx      # User profile and settings
+│   └── [25+ other components]   # Feature-specific components
+├── lib/                         # Core utilities and services
+│   ├── store.ts                # Zustand state management
+│   ├── types.ts                # TypeScript definitions (15+ interfaces)
+│   ├── supabaseClient.ts       # Database client configuration
+│   ├── adminUtils.ts           # Administrative utilities
+│   ├── degreeTemplateService.ts # Template management service
+│   ├── sharingService.ts       # Collaboration features
+│   └── validationSchemas.ts    # Zod validation schemas
+├── hooks/                       # Custom React hooks
+│   ├── useAuth.ts              # Authentication management
+│   ├── useAutoSave.ts          # Automatic data persistence
+│   ├── useKeyboardShortcuts.ts # Keyboard navigation
+│   └── useServiceWorker.ts     # PWA functionality
+├── scripts/                     # Administrative and utility scripts
+│   ├── seedTemplates.ts        # Database seeding
+│   ├── createFirstAdmin.ts     # Admin user creation
+│   ├── promoteUserToAdmin.ts   # User role management
+│   └── [10+ other scripts]     # Various utilities
+└── public/                      # Static assets and PWA files
 ```
 
 ## 🛠️ Technology Stack
 
-### **Frontend**
-- **[Next.js 15](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible UI components
-- **[Framer Motion](https://www.framer.com/motion/)** - Smooth animations
-- **[Lucide React](https://lucide.dev/)** - Beautiful icons
+### Frontend Architecture
+- **Next.js 14**: React framework with App Router and Server Components
+- **TypeScript**: Full type safety with strict mode enabled
+- **Tailwind CSS**: Utility-first CSS with custom design system
+- **Framer Motion**: Advanced animations and micro-interactions
+- **Radix UI**: Accessible, unstyled component primitives
+- **React Hook Form**: Performant form handling with validation
+- **Hello Pangea DnD**: Advanced drag-and-drop functionality
 
-### **State Management**
-- **[Zustand](https://zustand-demo.pmnd.rs/)** - Lightweight state management
-- **[React Hook Form](https://react-hook-form.com/)** - Performant forms
-- **[Zod](https://zod.dev/)** - Schema validation
+### State Management & Data Flow
+- **Zustand**: Lightweight, performant state management
+- **React Query**: Server state management and caching
+- **Zod**: Runtime type validation and schema parsing
+- **Immer**: Immutable state updates
 
-### **Backend & Database**
-- **[Supabase](https://supabase.com/)** - Backend-as-a-Service
-- **PostgreSQL** - Robust relational database
-- **Row Level Security** - Secure data access
+### Backend & Database
+- **Supabase**: PostgreSQL database with real-time subscriptions
+- **Row Level Security**: Fine-grained access control
+- **Edge Functions**: Serverless backend logic
+- **Real-time Subscriptions**: Live collaborative features
 
-### **Development Tools**
-- **[Vitest](https://vitest.dev/)** - Fast unit testing
-- **[ESLint](https://eslint.org/)** - Code linting
-- **[Prettier](https://prettier.io/)** - Code formatting
+### Development & Quality Tools
+- **ESLint**: Advanced linting with custom rules
+- **Prettier**: Consistent code formatting
+- **Husky**: Git hooks for quality gates
+- **Vitest**: Fast unit and integration testing
+- **TypeScript**: Static analysis and IntelliSense
 
-## 📖 Usage Guide
+### Performance & Optimization
+- **Next.js Image Optimization**: Automatic image optimization
+- **Bundle Analyzer**: Bundle size monitoring
+- **Service Worker**: Offline functionality and caching
+- **Code Splitting**: Automatic route-based splitting
+- **Tree Shaking**: Dead code elimination
 
-### **Getting Started with Your First Semester**
+## 📖 Comprehensive Usage Guide
 
-1. **Set Up Your Degree**
-   - Click the degree setup button or press `Shift + A`
-   - Enter your degree name and total credit requirements
-   - This helps track your progress toward graduation
+### Getting Started with Your Academic Plan
 
-2. **Add Your First Semester**
-   - Click "Add Semester" or press `A`
-   - Choose the season (Autumn, Spring, Summer) and year
-   - Mark it as active if it's your current semester
+1. **Initial Setup**
+   - Create an account or sign in with existing credentials
+   - Complete the degree setup wizard with your program details
+   - Import existing coursework or start fresh
 
-3. **Add Courses**
-   - Click "Add Course" within a semester card
-   - Fill in course details: name, credits, schedule
-   - The app automatically assigns colors and detects conflicts
+2. **Creating Your First Semester**
+   - Click "Add Semester" and enter semester details
+   - Choose from pre-built templates or create custom semesters
+   - Add courses with detailed information (credits, schedule, prerequisites)
 
-4. **Track Your Progress**
-   - View your GPA calculations in real-time
-   - Monitor credit completion in the progress section
-   - Switch to schedule view to see your weekly timetable
+3. **Advanced Course Management**
+   - **Drag & Drop**: Reorder courses within and between semesters
+   - **Bulk Operations**: Select multiple courses for batch editing
+   - **Schedule Integration**: Add time slots for automatic conflict detection
+   - **Grade Tracking**: Enter grades for real-time GPA calculation
 
-### **Advanced Features**
+### Mastering the Schedule View
 
-- **Drag & Drop**: Reorder semesters and courses by dragging them
-- **Notes**: Use the notes panel for planning and reminders
-- **Schedule Conflicts**: Red highlights show time conflicts
-- **PDF Export**: Generate a beautiful PDF of your academic plan
-- **Theme Toggle**: Switch between light and dark modes
+- **Multi-View Options**: Switch between semester planning and calendar views
+- **Conflict Resolution**: Automatic detection with suggested solutions
+- **Time Management**: Visual representation of daily and weekly schedules
+- **Export Options**: Generate PDF schedules and calendar files
 
-## 🧪 Testing
+### Advanced Notes and Organization
 
-Run the test suite to ensure everything works correctly:
+- **Hierarchical Structure**: Organize notes at global, semester, and course levels
+- **Rich Text Features**: Formatting, lists, links, and markdown support
+- **Search and Filter**: Find notes quickly with full-text search
+- **Collaboration**: Share notes with study groups and advisors
 
+### Progress Tracking and Analytics
+
+- **Real-Time Progress**: Visual dashboards showing completion status
+- **Requirement Tracking**: Monitor major, minor, and general education progress
+- **Performance Analytics**: GPA trends, credit distribution, and projections
+- **Graduation Planning**: AI-powered timeline with course availability data
+
+## 🧪 Testing & Quality Assurance
+
+### Running Tests
 ```bash
-npm run test
-# or
-yarn test
+npm test                    # Run all tests
+npm run test:watch         # Continuous testing
+npm run test:coverage      # Generate coverage reports
+npm run test:e2e          # End-to-end testing
 ```
 
-## 🚀 Deployment
+### Code Quality
+```bash
+npm run lint              # ESLint analysis
+npm run lint:fix          # Auto-fix linting issues
+npm run type-check        # TypeScript validation
+npm run format            # Prettier formatting
+```
 
-### **Deploy to Vercel (Recommended)**
+### Performance Testing
+```bash
+npm run build:analyze     # Bundle analysis
+npm run lighthouse        # Performance auditing
+```
 
-1. Push your code to GitHub
-2. Connect your repository to [Vercel](https://vercel.com)
-3. Add your environment variables in Vercel dashboard
-4. Deploy with one click!
+## 🚀 Deployment & Production
 
-### **Deploy to Netlify**
+### Vercel (Recommended)
+```bash
+# Automatic deployment
+vercel --prod
 
-1. Build the project: `npm run build`
-2. Deploy the `out` folder to [Netlify](https://netlify.com)
-3. Configure environment variables in Netlify dashboard
+# Environment variables required:
+# NEXT_PUBLIC_SUPABASE_URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY
+```
 
-## 🤝 Contributing
+### Alternative Platforms
+- **Netlify**: Full Next.js support with edge functions
+- **Railway**: Integrated database and deployment
+- **DigitalOcean App Platform**: Managed container deployment
+- **AWS Amplify**: Serverless deployment with CDN
 
-We welcome contributions! Here's how you can help:
+### Production Build
+```bash
+npm run build             # Production build
+npm run start            # Production server
+npm run export           # Static export (if applicable)
+```
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** and add tests if applicable
-4. **Commit your changes**: `git commit -m 'Add amazing feature'`
-5. **Push to the branch**: `git push origin feature/amazing-feature`
-6. **Open a Pull Request**
+### Performance Optimization
+- **Image Optimization**: Automatic WebP conversion and lazy loading
+- **Code Splitting**: Route-based and component-based splitting
+- **Caching Strategy**: Aggressive caching with smart invalidation
+- **CDN Integration**: Global content delivery optimization
 
-### **Development Guidelines**
+## 🤝 Contributing & Development
 
-- Follow the existing code style and conventions
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting
+### Development Workflow
+1. **Fork and Clone**: Create your development environment
+2. **Feature Branch**: `git checkout -b feature/amazing-feature`
+3. **Development**: Follow coding standards and add tests
+4. **Quality Gates**: Ensure all tests pass and linting is clean
+5. **Pull Request**: Submit with detailed description and screenshots
 
-## 📝 License
+### Code Standards
+- **TypeScript First**: All new code must be TypeScript
+- **Component Architecture**: Follow established patterns and conventions
+- **Testing Requirements**: Unit tests for utilities, integration tests for features
+- **Documentation**: Update README and inline documentation
+- **Accessibility**: Ensure WCAG 2.1 AA compliance
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Administrative Features Development
+```bash
+npm run admin:test        # Test admin functionality
+npm run admin:seed        # Seed admin data for development
+npm run admin:promote     # Promote users to admin (development)
+```
 
-## 🙏 Acknowledgments
+## 📄 License & Legal
 
-- **[shadcn/ui](https://ui.shadcn.com/)** for the beautiful component library
-- **[Supabase](https://supabase.com/)** for the amazing backend platform
-- **[Vercel](https://vercel.com/)** for seamless deployment
-- **[Lucide](https://lucide.dev/)** for the gorgeous icons
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for complete details.
 
-## 📞 Support
+### Third-Party Licenses
+- All dependencies are MIT, Apache 2.0, or similarly permissive licenses
+- No GPL or copyleft dependencies included
+- Full license attribution available in `LICENSES.md`
 
-Have questions or need help? We're here for you:
+## 🆘 Support & Community
 
-- 📧 **Email**: mahfuzurrrahmannn@gmail.com
-- 💬 **Discord**: [Join our community](https://discord.gg/uniplan)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/uniplan/issues)
-- 📖 **Documentation**: [Full Documentation](https://docs.uniplan.app)
+### Getting Help
+- **📖 Documentation**: Comprehensive guides and API documentation
+- **🐛 Bug Reports**: GitHub Issues with detailed templates
+- **💡 Feature Requests**: GitHub Discussions for community input
+- **💬 Community**: Discord server for real-time support
+
+### Support Channels
+- **GitHub Issues**: Bug reports and technical issues
+- **GitHub Discussions**: Feature requests and general questions
+- **Discord Community**: Real-time chat and collaboration
+- **Email Support**: Direct support for critical issues
+
+## 🙏 Acknowledgments & Credits
+
+### Core Technologies
+- **[Next.js](https://nextjs.org/)**: React framework and development platform
+- **[Supabase](https://supabase.com/)**: Backend-as-a-Service and database
+- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first CSS framework
+- **[Radix UI](https://www.radix-ui.com/)**: Accessible component primitives
+- **[Framer Motion](https://www.framer.com/motion/)**: Animation library
+
+### Design & Assets
+- **[Lucide Icons](https://lucide.dev/)**: Beautiful, consistent iconography
+- **[Heroicons](https://heroicons.com/)**: Additional icon resources
+- **[Unsplash](https://unsplash.com/)**: High-quality photography
+
+### Community & Contributors
+- Special thanks to all contributors and beta testers
+- Academic advisors who provided domain expertise
+- Open source community for tools and inspiration
 
 ---
 
-<div align="center">
-  <p><strong>Made with ❤️ for students, by students</strong></p>
-  <p>⭐ Star this repo if UniPlan helps you succeed in your academic journey!</p>
-</div>
+**UniPlan** - Empowering students to take control of their academic journey with intelligent planning, seamless collaboration, and comprehensive progress tracking.
