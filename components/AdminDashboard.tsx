@@ -6,7 +6,6 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Alert, AlertDescription } from './ui/alert';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart';
 import { 
   Users, 
   BookOpen, 
@@ -22,14 +21,10 @@ import {
   CheckCircle,
   XCircle,
   Activity,
-  BarChart3,
-  PieChart,
-  LineChart,
   Server,
   Wifi,
   Clock
 } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { 
   getCurrentUserAdminLevel, 
   getCurrentUserPermissions, 
@@ -72,49 +67,9 @@ export default function AdminDashboard() {
   const [seedingStatus, setSeedingStatus] = useState<'idle' | 'seeding' | 'success' | 'error'>('idle');
   const [seedingMessage, setSeedingMessage] = useState('');
 
-  // Optimized mock data for charts (reduced size for better performance)
-  const userGrowthData = [
-    { month: 'Jan', users: 45, newUsers: 8 },
-    { month: 'Feb', users: 52, newUsers: 7 },
-    { month: 'Mar', users: 61, newUsers: 9 },
-    { month: 'Apr', users: 73, newUsers: 12 },
-  ];
 
-  const templateUsageData = [
-    { name: 'BSCSE', value: 65, color: '#3B82F6' },
-    { name: 'BBA', value: 25, color: '#10B981' },
-    { name: 'Others', value: 10, color: '#8B5CF6' },
-  ];
 
-  const systemMetricsData = [
-     { time: '00:00', cpu: 35, memory: 45, storage: 68 },
-     { time: '06:00', cpu: 42, memory: 48, storage: 69 },
-     { time: '12:00', cpu: 55, memory: 52, storage: 70 },
-     { time: '18:00', cpu: 48, memory: 49, storage: 71 },
-   ];
 
-   const systemHealthData = {
-     database: {
-       status: 'healthy',
-       responseTime: '6ms',
-       connections: 28,
-       maxConnections: 100,
-       uptime: '99.95%'
-     },
-     server: {
-       status: 'healthy',
-       cpu: 35,
-       memory: 42,
-       storage: 65,
-       uptime: '15 days'
-     },
-     api: {
-       status: 'healthy',
-       requests: '720/min',
-       errors: '0.02%',
-       avgResponse: '85ms'
-     }
-   };
 
   useEffect(() => {
     loadAdminData();
@@ -364,328 +319,17 @@ export default function AdminDashboard() {
       {/* Analytics Charts */}
       {permissions.canViewAnalytics && (
         <div className="space-y-6">
-          {/* User Growth Chart */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="bg-muted/50 rounded-t-lg border-b">
-              <CardTitle className="flex items-center space-x-2">
-                <LineChart className="h-5 w-5 text-primary" />
-                <span>User Growth Analytics</span>
-              </CardTitle>
-              <CardDescription>Monthly user registration and growth trends</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ChartContainer
-                config={{
-                  users: {
-                    label: "Total Users",
-                    color: "hsl(var(--chart-1))",
-                  },
-                  newUsers: {
-                    label: "New Users",
-                    color: "hsl(var(--chart-2))",
-                  },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={userGrowthData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="month" 
-                      className="text-xs fill-muted-foreground" 
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    />
-                    <YAxis 
-                      className="text-xs fill-muted-foreground" 
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area
-                      type="monotone"
-                      dataKey="users"
-                      stackId="1"
-                      stroke="hsl(var(--chart-1))"
-                      fill="hsl(var(--chart-1))"
-                      fillOpacity={0.6}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="newUsers"
-                      stackId="2"
-                      stroke="hsl(var(--chart-2))"
-                      fill="hsl(var(--chart-2))"
-                      fillOpacity={0.8}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Template Usage Distribution */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
-                <CardTitle className="flex items-center space-x-2">
-                  <PieChart className="h-5 w-5 text-primary" />
-                  <span>Template Usage</span>
-                </CardTitle>
-                <CardDescription>Distribution of template applications</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ChartContainer
-                  config={{
-                    BSCSE: {
-                      label: "BSCSE",
-                      color: "hsl(var(--chart-1))",
-                    },
-                    BBA: {
-                      label: "BBA",
-                      color: "hsl(var(--chart-2))",
-                    },
-                    Others: {
-                      label: "Others",
-                      color: "hsl(var(--chart-3))",
-                    },
-                  }}
-                  className="h-[250px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPieChart>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Pie
-                          data={templateUsageData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {templateUsageData.map((entry, index) => {
-                            const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
-                            return (
-                              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                            );
-                          })}
-                        </Pie>
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-                <div className="mt-4 space-y-2">
-                  {templateUsageData.map((item, index) => {
-                    const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
-                    return (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: colors[index % colors.length] }}
-                          ></div>
-                          <span className="text-sm font-medium text-foreground">{item.name}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">{item.value}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* System Metrics */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <span>System Metrics</span>
-                </CardTitle>
-                <CardDescription>Real-time system performance</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ChartContainer
-                  config={{
-                    cpu: {
-                      label: "CPU Usage",
-                      color: "hsl(var(--chart-1))",
-                    },
-                    memory: {
-                      label: "Memory Usage",
-                      color: "hsl(var(--chart-2))",
-                    },
-                    storage: {
-                      label: "Storage Usage",
-                      color: "hsl(var(--chart-3))",
-                    },
-                  }}
-                  className="h-[250px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsLineChart data={systemMetricsData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="time" 
-                        className="text-xs fill-muted-foreground" 
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <YAxis 
-                        className="text-xs fill-muted-foreground" 
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="cpu"
-                        stroke="hsl(var(--chart-1))"
-                        strokeWidth={2}
-                        dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 4 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="memory"
-                        stroke="hsl(var(--chart-2))"
-                        strokeWidth={2}
-                        dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 2, r: 4 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="storage"
-                        stroke="hsl(var(--chart-3))"
-                        strokeWidth={2}
-                        dot={{ fill: 'hsl(var(--chart-3))', strokeWidth: 2, r: 4 }}
-                      />
-                    </RechartsLineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+
+
           </div>
         </div>
        )}
 
-       {/* System Health Monitoring */}
-       {permissions.canViewAnalytics && (
-         <div className="space-y-6">
-           <Card className="border-0 shadow-lg">
-             <CardHeader className="bg-muted/50 rounded-t-lg border-b">
-               <CardTitle className="flex items-center space-x-2">
-                 <Server className="h-5 w-5 text-primary" />
-                 <span>System Health Monitoring</span>
-               </CardTitle>
-               <CardDescription>Real-time system status and performance metrics</CardDescription>
-             </CardHeader>
-             <CardContent className="p-6">
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 {/* Database Health */}
-                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center space-x-2">
-                       <Database className="h-5 w-5 text-blue-600" />
-                       <h3 className="font-semibold text-blue-900">Database</h3>
-                     </div>
-                     <Badge className={`${systemHealthData.database.status === 'healthy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                       {systemHealthData.database.status}
-                     </Badge>
-                   </div>
-                   <div className="space-y-2 text-sm">
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Response Time:</span>
-                       <span className="font-medium">{systemHealthData.database.responseTime}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Connections:</span>
-                       <span className="font-medium">{systemHealthData.database.connections}/{systemHealthData.database.maxConnections}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Uptime:</span>
-                       <span className="font-medium">{systemHealthData.database.uptime}</span>
-                     </div>
-                   </div>
-                 </div>
 
-                 {/* Server Health */}
-                 <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center space-x-2">
-                       <Server className="h-5 w-5 text-green-600" />
-                       <h3 className="font-semibold text-green-900">Server</h3>
-                     </div>
-                     <Badge className={`${systemHealthData.server.status === 'healthy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                       {systemHealthData.server.status}
-                     </Badge>
-                   </div>
-                   <div className="space-y-2 text-sm">
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">CPU Usage:</span>
-                       <span className="font-medium">{systemHealthData.server.cpu}%</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Memory:</span>
-                       <span className="font-medium">{systemHealthData.server.memory}%</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Storage:</span>
-                       <span className="font-medium">{systemHealthData.server.storage}%</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Uptime:</span>
-                       <span className="font-medium">{systemHealthData.server.uptime}</span>
-                     </div>
-                   </div>
-                 </div>
-
-                 {/* API Health */}
-                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center space-x-2">
-                       <Wifi className="h-5 w-5 text-purple-600" />
-                       <h3 className="font-semibold text-purple-900">API</h3>
-                     </div>
-                     <Badge className={`${systemHealthData.api.status === 'healthy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                       {systemHealthData.api.status}
-                     </Badge>
-                   </div>
-                   <div className="space-y-2 text-sm">
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Requests:</span>
-                       <span className="font-medium">{systemHealthData.api.requests}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Error Rate:</span>
-                       <span className="font-medium">{systemHealthData.api.errors}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-600">Avg Response:</span>
-                       <span className="font-medium">{systemHealthData.api.avgResponse}</span>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-
-               {/* System Alerts */}
-               <div className="mt-6">
-                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                   <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                   <span>System Alerts</span>
-                 </h3>
-                 <div className="space-y-2">
-                   <Alert className="border-green-200 bg-green-50">
-                     <CheckCircle className="h-4 w-4 text-green-600" />
-                     <AlertDescription className="text-green-800">
-                       System optimization completed successfully. Memory usage reduced from 74% to 42%.
-                     </AlertDescription>
-                   </Alert>
-                   <Alert className="border-blue-200 bg-blue-50">
-                     <Clock className="h-4 w-4 text-blue-600" />
-                     <AlertDescription className="text-blue-800">
-                       Scheduled maintenance window: Sunday 2:00 AM - 4:00 AM UTC
-                     </AlertDescription>
-                   </Alert>
-                 </div>
-               </div>
-             </CardContent>
-           </Card>
-         </div>
-       )}
 
        {/* Activity Feed */}
        {permissions.canViewAnalytics && (
