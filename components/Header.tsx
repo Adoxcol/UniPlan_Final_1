@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Calendar, Grid3X3, Download, Database, BookOpen, Library, Plus, User } from 'lucide-react';
+import { Moon, Sun, Calendar, Grid3X3, Download, Database, BookOpen, Library, Plus, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -18,6 +18,7 @@ import { DataManagementDialog } from '@/components/DataManagementDialog';
 import { CreateTemplateDialog } from '@/components/CreateTemplateDialog';
 import { TemplateLibrary } from '@/components/TemplateLibrary';
 import { MyTemplates } from '@/components/MyTemplates';
+import { isCurrentUserAdmin } from '@/lib/adminUtils';
 import Link from 'next/link';
 
 export function Header() {
@@ -36,10 +37,28 @@ export function Header() {
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showMyTemplates, setShowMyTemplates] = useState(false);
+  
+  // Admin state
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    checkAdminStatus();
+  }, [userId]);
+
+  const checkAdminStatus = async () => {
+    if (userId) {
+      try {
+        const adminStatus = await isCurrentUserAdmin();
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    } else {
+      setIsAdmin(false);
+    }
+  };
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/90 dark:border-border/50">
@@ -146,6 +165,15 @@ export function Header() {
           ) : (
             // Placeholder button to maintain layout during SSR
             <div className="h-9 w-9 border border-border rounded-md opacity-50" />
+          )}
+
+          {userId && isAdmin && (
+            <Link href="/admin">
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <Shield className="h-4 w-4" />
+                <span className="sr-only">Admin Dashboard</span>
+              </Button>
+            </Link>
           )}
 
           {userId && (

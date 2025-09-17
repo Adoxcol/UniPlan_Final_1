@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Building
+  Building,
+  Shield
 } from 'lucide-react';
 import { DegreeTemplateService } from '@/lib/degreeTemplateService';
 import { DegreeTemplate } from '@/lib/types';
@@ -59,20 +60,30 @@ export function TemplateLibrary({ open, onOpenChange }: TemplateLibraryProps) {
     }
   };
 
-  const filteredTemplates = templates.filter(template => {
-    const query = searchQuery.toLowerCase();
-    return (
-      template.name.toLowerCase().includes(query) ||
-      template.description?.toLowerCase().includes(query) ||
-      template.university?.toLowerCase().includes(query) ||
-      template.major?.toLowerCase().includes(query)
-    );
-  });
+  const filteredTemplates = templates
+    .filter(template => {
+      const query = searchQuery.toLowerCase();
+      return (
+        template.name.toLowerCase().includes(query) ||
+        template.description?.toLowerCase().includes(query) ||
+        template.university?.toLowerCase().includes(query) ||
+        template.major?.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      // Prioritize official templates first
+      if (a.is_official && !b.is_official) return -1;
+      if (!a.is_official && b.is_official) return 1;
+      // Then sort by download count (descending)
+      return b.download_count - a.download_count;
+    });
 
   const handleApplyTemplate = async (template: DegreeTemplate) => {
     setIsApplying(template.id);
     try {
       await DegreeTemplateService.applyTemplate(template.id);
+      // Sync data from database to update the UI
+      await useAppStore.getState().syncFromSupabase();
       toast.success(`Applied "${template.name}" template successfully!`);
       onOpenChange(false);
     } catch (error) {
@@ -164,10 +175,18 @@ export function TemplateLibrary({ open, onOpenChange }: TemplateLibraryProps) {
                               </CardDescription>
                             )}
                           </div>
-                          <Badge variant="secondary" className="ml-2">
-                            <Users className="h-3 w-3 mr-1" />
-                            Public
-                          </Badge>
+                          <div className="flex gap-2 ml-2">
+                            {template.is_official && (
+                              <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Official
+                              </Badge>
+                            )}
+                            <Badge variant="secondary">
+                              <Users className="h-3 w-3 mr-1" />
+                              Public
+                            </Badge>
+                          </div>
                         </div>
                       </CardHeader>
                       
@@ -235,7 +254,15 @@ export function TemplateLibrary({ open, onOpenChange }: TemplateLibraryProps) {
             <div className="w-80 border-l pl-6 overflow-y-auto">
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">{selectedTemplate.name}</h3>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-lg">{selectedTemplate.name}</h3>
+                    {selectedTemplate.is_official && (
+                      <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Official
+                      </Badge>
+                    )}
+                  </div>
                   {selectedTemplate.description && (
                     <p className="text-sm text-muted-foreground">
                       {selectedTemplate.description}

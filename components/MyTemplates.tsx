@@ -72,6 +72,8 @@ export function MyTemplates({ open, onOpenChange, onCreateNew }: MyTemplatesProp
     setIsApplying(template.id);
     try {
       await DegreeTemplateService.applyTemplate(template.id);
+      // Sync data from database to update the UI
+      await useAppStore.getState().syncFromSupabase();
       toast.success(`Applied "${template.name}" template successfully!`);
       onOpenChange(false);
     } catch (error) {

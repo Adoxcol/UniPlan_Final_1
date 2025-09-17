@@ -1,6 +1,9 @@
 import { supabase } from './supabaseClient';
 import { DegreeTemplate, DegreeTemplateSemester, DegreeTemplateCourse } from './types';
 
+// Generate a unique ID for database records
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 export interface CreateDegreeTemplateData {
   name: string;
   description?: string;
@@ -9,6 +12,7 @@ export interface CreateDegreeTemplateData {
   total_credits?: number;
   duration_years?: number;
   is_public?: boolean;
+  is_official?: boolean;
   tags?: string[];
 }
 
@@ -49,13 +53,10 @@ export class DegreeTemplateService {
       throw new Error('No valid semesters found to create template');
     }
 
-    const templateId = crypto.randomUUID();
-    
-    // Create the main template
+    // Create the main template (let database generate ID)
     const { data: template, error: templateError } = await supabase
       .from('degree_templates')
       .insert({
-        id: templateId,
         user_id: user.id,
         name: templateData.name,
         description: templateData.description,
@@ -64,6 +65,7 @@ export class DegreeTemplateService {
         total_credits: templateData.total_credits,
         duration_years: templateData.duration_years,
         is_public: templateData.is_public || false,
+        is_official: templateData.is_official || false,
         tags: templateData.tags || [],
         download_count: 0
       })
@@ -97,7 +99,6 @@ export class DegreeTemplateService {
     
     for (let i = 0; i < sortedSemesters.length; i++) {
       const semester = sortedSemesters[i];
-      const semesterId = crypto.randomUUID();
       
       // Get the relative year for this semester's calendar year
       const calendarYear = semester.year;
@@ -106,24 +107,24 @@ export class DegreeTemplateService {
       // Ensure year is within valid range (1-8)
       const validYear = Math.max(1, Math.min(relativeYear, 8));
       
-      const { error: semesterError } = await supabase
+      const { data: semesterData, error: semesterError } = await supabase
         .from('degree_template_semesters')
         .insert({
-          id: semesterId,
-          degree_template_id: templateId,
+          degree_template_id: template.id,
           name: semester.name,
           season: semester.season,
           year: validYear,
           notes: semester.notes
-        });
+        })
+        .select()
+        .single();
 
       if (semesterError) throw semesterError;
 
       // Add courses for this semester
       if (semester.courses && semester.courses.length > 0) {
         const coursesData = semester.courses.map((course: any) => ({
-          id: crypto.randomUUID(),
-          degree_template_semester_id: semesterId,
+          degree_template_semester_id: semesterData.id,
           name: course.name,
           course_code: course.code,
           credits: course.credits,
@@ -296,6 +297,16 @@ export class DegreeTemplateService {
       .update({ view_count: template.view_count + 1 })
       .eq('id', templateId);
 
+    // Set up degree information from template
+    await supabase
+      .from('profiles')
+      .upsert({
+        user_id: user.id,
+        degree_name: template.name,
+        degree_total_credits: template.total_credits,
+        updated_at: new Date().toISOString()
+      });
+
     // Clear existing semesters (optional - could be a user choice)
     await supabase
       .from('semesters')
@@ -303,28 +314,41 @@ export class DegreeTemplateService {
       .eq('user_id', user.id);
 
     // Create semesters from template
+    // Convert relative academic years to calendar years
+    const currentYear = new Date().getFullYear();
+    const baseYear = Math.max(2020, Math.min(currentYear, 2030)); // Ensure base year is within valid range
+    
     for (const templateSemester of template.semesters) {
-      const semesterId = crypto.randomUUID();
+      const semesterId = generateId();
       
-      const { error: semesterError } = await supabase
+      // Convert relative academic year (1-8) to calendar year
+      // Academic year 1 starts at baseYear, year 2 at baseYear+1, etc.
+      const calendarYear = baseYear + (templateSemester.year - 1);
+      
+      // Ensure the calculated year is within the database constraint range (2020-2030)
+      const validYear = Math.max(2020, Math.min(calendarYear, 2030));
+      
+      const { data: semesterData, error: semesterError } = await supabase
         .from('semesters')
         .insert({
           id: semesterId,
           user_id: user.id,
           name: templateSemester.name,
           season: templateSemester.season,
-          year: templateSemester.year,
+          year: validYear,
           notes: templateSemester.notes,
           is_active: false
-        });
+        })
+        .select()
+        .single();
 
       if (semesterError) throw semesterError;
 
       // Add courses from template
       if (templateSemester.courses && templateSemester.courses.length > 0) {
         const coursesData = templateSemester.courses.map(templateCourse => ({
-          id: crypto.randomUUID(),
-          semester_id: semesterId,
+          id: generateId(),
+          semester_id: semesterData.id,
           user_id: user.id,
           name: templateCourse.name,
           credits: templateCourse.credits,

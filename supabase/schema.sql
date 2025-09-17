@@ -40,6 +40,10 @@ create table public.profiles (
   profile_public boolean default false not null,
   allow_plan_sharing boolean default true not null,
   
+  -- Admin Role
+  is_admin boolean default false not null,
+  admin_level text default 'user' not null,
+  
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   
@@ -58,7 +62,8 @@ create table public.profiles (
   constraint profiles_major_length check (major is null or length(trim(major)) <= 100),
   constraint profiles_minor_length check (minor is null or length(trim(minor)) <= 100),
   constraint profiles_graduation_year_range check (graduation_year is null or (graduation_year >= 2020 and graduation_year <= 2035)),
-  constraint profiles_gpa_range check (gpa is null or (gpa >= 0 and gpa <= 4))
+  constraint profiles_gpa_range check (gpa is null or (gpa >= 0 and gpa <= 4)),
+  constraint profiles_admin_level_valid check (admin_level in ('user', 'moderator', 'admin', 'super_admin'))
 );
 
 -- Semesters table: stores semester information
@@ -87,7 +92,7 @@ create table public.courses (
   user_id uuid not null references auth.users(id) on delete cascade,
   semester_id text not null references public.semesters(id) on delete cascade,
   name text not null,
-  credits integer not null,
+  credits numeric(3,1) not null,
   days_of_week text[],
   start_time text,
   end_time text,
@@ -99,7 +104,7 @@ create table public.courses (
   
   -- Constraints
   constraint courses_name_length check (length(trim(name)) >= 1 and length(trim(name)) <= 100),
-  constraint courses_credits_range check (credits >= 1 and credits <= 6),
+  constraint courses_credits_range check (credits >= 0 and credits <= 6),
   constraint courses_grade_range check (grade is null or (grade >= 0 and grade <= 4)),
   constraint courses_time_format check (
     (start_time is null or start_time ~ '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$') and
@@ -161,7 +166,7 @@ create table public.shared_plan_courses (
   id uuid primary key default gen_random_uuid(),
   shared_plan_semester_id uuid not null references public.shared_plan_semesters(id) on delete cascade,
   name text not null,
-  credits integer not null,
+  credits numeric(3,1) not null,
   days_of_week text[],
   start_time text,
   end_time text,
@@ -171,7 +176,7 @@ create table public.shared_plan_courses (
   
   -- Constraints
   constraint shared_plan_courses_name_length check (length(trim(name)) >= 1 and length(trim(name)) <= 100),
-  constraint shared_plan_courses_credits_range check (credits >= 1 and credits <= 6),
+  constraint shared_plan_courses_credits_range check (credits >= 0 and credits <= 6),
   constraint shared_plan_courses_grade_range check (grade is null or (grade >= 0 and grade <= 4)),
   constraint shared_plan_courses_time_format check (
     (start_time is null or start_time ~ '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$') and
@@ -204,6 +209,7 @@ create table public.degree_templates (
   duration_years integer,
   tags text[],
   is_public boolean default false not null,
+  is_official boolean default false not null,
   share_token text unique not null default encode(gen_random_bytes(32), 'base64'),
   view_count integer default 0 not null,
   like_count integer default 0 not null,
@@ -245,7 +251,7 @@ create table public.degree_template_courses (
   id uuid primary key default gen_random_uuid(),
   degree_template_semester_id uuid not null references public.degree_template_semesters(id) on delete cascade,
   name text not null,
-  credits integer not null,
+  credits numeric(3,1) not null,
   course_code text,
   prerequisites text,
   description text,
@@ -253,7 +259,7 @@ create table public.degree_template_courses (
   
   -- Constraints
   constraint degree_template_courses_name_length check (length(trim(name)) >= 1 and length(trim(name)) <= 100),
-  constraint degree_template_courses_credits_range check (credits >= 1 and credits <= 6),
+  constraint degree_template_courses_credits_range check (credits >= 0 and credits <= 6),
   constraint degree_template_courses_code_length check (course_code is null or length(trim(course_code)) <= 20),
   constraint degree_template_courses_prerequisites_length check (prerequisites is null or length(prerequisites) <= 500),
   constraint degree_template_courses_description_length check (description is null or length(description) <= 500)
@@ -279,6 +285,7 @@ create index idx_shared_plan_courses_semester_id on public.shared_plan_courses(s
 create index idx_degree_templates_user_id on public.degree_templates(user_id);
 create index idx_degree_templates_share_token on public.degree_templates(share_token);
 create index idx_degree_templates_public on public.degree_templates(is_public) where is_public = true;
+create index idx_degree_templates_official on public.degree_templates(is_official) where is_official = true;
 create index idx_degree_template_semesters_template_id on public.degree_template_semesters(degree_template_id);
 create index idx_degree_template_courses_semester_id on public.degree_template_courses(degree_template_semester_id);
 

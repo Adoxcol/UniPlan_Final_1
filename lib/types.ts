@@ -72,6 +72,10 @@ export interface Profile {
   profile_public: boolean;
   allow_plan_sharing: boolean;
   
+  // Admin Role
+  is_admin: boolean;
+  admin_level: 'user' | 'moderator' | 'admin' | 'super_admin';
+  
   created_at: string;
   updated_at: string;
 }
@@ -125,6 +129,7 @@ export interface DegreeTemplate {
   duration_years?: number | null;
   tags?: string[] | null;
   is_public: boolean;
+  is_official?: boolean;
   share_token: string;
   view_count: number;
   like_count: number;
