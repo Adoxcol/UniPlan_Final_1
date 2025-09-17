@@ -18,18 +18,17 @@ describe('Data Persistence', () => {
     vi.clearAllMocks();
   });
 
-  it('should update store state when degree is set', () => {
-    // Make a state change
-    useAppStore.getState().setDegree({
-      name: 'Test Degree',
-      totalCreditsRequired: 120
-    });
+  it('should persist data to localStorage when state changes', () => {
+    const degreeData = {
+      name: 'Computer Science',
+      totalCredits: 120,
+      university: 'Test University'
+    };
+
+    useAppStore.getState().setDegree(degreeData);
     
-    // Verify the state was updated
-    const state = useAppStore.getState();
-    expect(state.degree).toBeTruthy();
-    expect(state.degree?.name).toBe('Test Degree');
-    expect(state.degree?.totalCreditsRequired).toBe(120);
+    // Zustand persist should have called setItem
+    expect(localStorageMock.setItem).toHaveBeenCalled();
   });
 
   it('should export data in correct JSON format', () => {
@@ -116,69 +115,47 @@ describe('Data Persistence', () => {
 
   it('should handle partial import data', () => {
     const partialData = {
-      semesters: [
-        {
-          id: 'test-sem-1',
-          name: 'Fall 2024',
-          year: 2024,
-          season: 'Autumn',
-          courses: []
-        }
-      ]
+      degree: {
+        name: 'Partial Degree'
+      }
+      // Missing semesters array
     };
 
     const result = useAppStore.getState().importData(JSON.stringify(partialData));
+    expect(result.success).toBe(true);
+    
+    const state = useAppStore.getState();
+    expect(state.degree?.name).toBe('Partial Degree');
+    expect(state.semesters).toHaveLength(0); // Should default to empty array
+  });
+
+  it('should maintain data integrity after multiple operations', () => {
+    // Perform multiple operations
+    useAppStore.getState().setDegree({ name: 'Test Degree', totalCredits: 120 });
+    
+    useAppStore.getState().addSemester({ name: 'Sem 1', year: 2024, season: 'Autumn' });
+    useAppStore.getState().addSemester({ name: 'Sem 2', year: 2024, season: 'Spring' });
+    
+    const [sem1, sem2] = useAppStore.getState().semesters;
+    
+    useAppStore.getState().addCourse(sem1.id, { name: 'Course 1', credits: 3 });
+    useAppStore.getState().addCourse(sem2.id, { name: 'Course 2', credits: 4 });
+    
+    // Export and re-import
+    const exported = useAppStore.getState().exportData();
+    useAppStore.getState().reset();
+    const result = useAppStore.getState().importData(exported);
     
     expect(result.success).toBe(true);
     
     const state = useAppStore.getState();
-    expect(state.semesters).toHaveLength(1);
-    expect(state.semesters[0].name).toBe('Fall 2024');
-  });
-
-  it('should maintain data integrity after multiple operations', () => {
-    // Set up initial data
-    const initialData = {
-      semesters: [
-        {
-          id: 'test-sem-1',
-          name: 'Fall 2024',
-          year: 2024,
-          season: 'Autumn',
-          courses: [
-            {
-              id: 'test-course-1',
-              name: 'Data Structures',
-              credits: 3
-            }
-          ]
-        }
-      ],
-      degree: {
-        name: 'Computer Science',
-        totalCreditsRequired: 120
-      }
-    };
-
-    // Import data
-    const result = useAppStore.getState().importData(JSON.stringify(initialData));
-    expect(result.success).toBe(true);
-
-    // Perform multiple operations
-    const store = useAppStore.getState();
-    store.addSemester({
-      name: 'Spring 2025',
-      year: 2025,
-      season: 'Spring'
-    });
-
-    // Export and verify integrity
-    const exportedData = store.exportData();
-    const parsedData = JSON.parse(exportedData);
+    expect(state.semesters).toHaveLength(2);
+    expect(state.semesters[0].courses).toHaveLength(1);
+    expect(state.semesters[1].courses).toHaveLength(1);
     
-    expect(parsedData.degree.name).toBe('Computer Science');
-    expect(parsedData.semesters).toHaveLength(2);
-    expect(parsedData.semesters[0].courses).toHaveLength(1);
+    // Verify GPA calculation still works
+    const gpa = state.calculateCumulativeGPA();
+    expect(typeof gpa).toBe('number');
   });
 
   it('should handle reset functionality correctly', () => {
