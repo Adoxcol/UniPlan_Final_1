@@ -142,6 +142,9 @@ export const useAppStore = create<AppState>()(
         });
 
         set({ semesters: newSemesters });
+        
+        // Return the generated course ID
+        return newCourse.id;
       },
 
       removeCourse: (semesterId, courseId) => {

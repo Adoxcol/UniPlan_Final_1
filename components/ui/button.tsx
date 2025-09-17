@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, MotionProps } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -34,20 +35,63 @@ const buttonVariants = cva(
   }
 )
 
+// Enhanced micro-interaction animations
+const buttonAnimations = {
+  whileHover: { 
+    scale: 1.02,
+    transition: { type: "spring" as const, stiffness: 400, damping: 17 }
+  },
+  whileTap: { 
+    scale: 0.98,
+    transition: { type: "spring" as const, stiffness: 400, damping: 17 }
+  },
+  initial: { scale: 1 },
+  animate: { scale: 1 }
+}
+
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  disableAnimations?: boolean
+  motionProps?: Partial<MotionProps>
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, disableAnimations = false, motionProps, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // If animations are disabled or it's a child component, use regular button
+    if (disableAnimations || asChild) {
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
+    
+    // Separate motion props from HTML props to avoid conflicts
+    const { 
+      onDrag, 
+      onDragStart, 
+      onDragEnd, 
+      onAnimationStart,
+      onAnimationEnd,
+      onAnimationIteration,
+      onTransitionEnd,
+      ...htmlProps 
+    } = props;
+    
+    // Use motion button with enhanced micro-interactions
     return (
-      <Comp
+      <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        {...props}
+        {...buttonAnimations}
+        {...motionProps}
+        {...htmlProps}
       />
     )
   }

@@ -3,6 +3,7 @@
 import { useState, memo, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 import { SemesterHeader } from './SemesterHeader';
 import { SemesterStats } from './SemesterStats';
 import { CourseList } from './CourseList';
@@ -56,14 +57,34 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
 
   return (
     <Draggable draggableId={semester.id} index={index}>
-      {(provided, snapshot) => (
+      {(provided, snapshot) => {
+        const cardAnimations = {
+          initial: { scale: 1, y: 0 },
+          whileHover: !snapshot?.isDragging ? { 
+            scale: 1.01,
+            y: -3,
+            transition: { 
+              type: "spring" as const, 
+              stiffness: 300, 
+              damping: 25,
+              duration: 0.2
+            }
+          } : {},
+          animate: snapshot?.isDragging ? {
+            rotate: 1,
+            scale: 1.05,
+            transition: { type: "spring" as const, stiffness: 300, damping: 20 }
+          } : { rotate: 0, scale: 1 }
+        };
+
+        return (
         <>
-          <Card 
+          <motion.div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`h-fit group hover:shadow-lg dark:hover:shadow-xl transition-all duration-300 border-2 ${
-              snapshot.isDragging ? 'rotate-1 scale-105 shadow-2xl dark:shadow-2xl' : ''
-            } dark:bg-card/50 dark:backdrop-blur-sm`}
+            className={`h-fit group rounded-lg border-2 bg-card text-card-foreground shadow-sm ${
+              snapshot.isDragging ? 'shadow-2xl dark:shadow-2xl' : 'hover:shadow-lg dark:hover:shadow-xl'
+            } dark:bg-card/50 dark:backdrop-blur-sm transition-shadow duration-300`}
             style={{
               borderColor: accentColor,
               backgroundImage: `linear-gradient(180deg, ${tintColor}, transparent 140px)`,
@@ -76,6 +97,7 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
             tabIndex={0}
             data-draggable-id={semester.id}
             data-semester-id={semester.id}
+            {...cardAnimations}
           >
             <div 
               className="h-1 dark:opacity-90" 
@@ -106,7 +128,7 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
                 onAddCourse={() => setShowAddCourse(true)}
               />
             </CardContent>
-          </Card>
+          </motion.div>
 
           <AddCourseDialog
             semesterId={semester.id}
@@ -126,7 +148,8 @@ function SemesterCardComponent({ semester, index }: SemesterCardProps) {
             onClose={() => setShowShareSemester(false)}
           />
         </>
-      )}
+        );
+      }}
     </Draggable>
   );
 }

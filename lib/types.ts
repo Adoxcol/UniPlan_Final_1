@@ -185,7 +185,7 @@ export interface AppState {
   reorderSemesters: (startIndex: number, endIndex: number) => void;
   autoLayoutSemesters: () => void;
   
-  addCourse: (semesterId: string, course: Omit<Course, 'id'>) => void;
+  addCourse: (semesterId: string, course: Omit<Course, 'id'>) => string;
   removeCourse: (semesterId: string, courseId: string) => void;
   updateCourse: (semesterId: string, courseId: string, updates: Partial<Course>) => void;
   reorderCourses: (semesterId: string, startIndex: number, endIndex: number) => void;

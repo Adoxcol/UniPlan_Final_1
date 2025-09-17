@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { LoadingSpinner, ActionFeedback } from '@/components/ui/loading-states';
 import { useAppStore } from '@/lib/store';
 import { courseSchema, type CourseFormData } from '@/lib/validationSchemas';
+import { useCourseAuditLogger } from '@/hooks/useAuditLogger';
 import { z } from 'zod';
 
 interface AddCourseDialogProps {
@@ -39,7 +42,9 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
   const [grade, setGrade] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { addCourse } = useAppStore();
+  const { logCourseCreate } = useCourseAuditLogger();
 
   const handleDayToggle = (day: string, checked: boolean) => {
     if (checked) {
@@ -53,6 +58,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+    setFeedback(null);
 
     try {
       const courseData: CourseFormData = {
@@ -67,16 +73,31 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
       // Validate with Zod
       const validatedData = courseSchema.parse(courseData);
       
-      addCourse(semesterId, validatedData);
+      // Add course to store
+      const courseId = addCourse(semesterId, validatedData);
       
-      // Reset form
-      setName('');
-      setCredits(3);
-      setSelectedDays([]);
-      setStartTime('');
-      setEndTime('');
-      setGrade('');
-      onClose();
+      // Log the course creation
+      await logCourseCreate(courseId, {
+        courseName: validatedData.name,
+        credits: validatedData.credits,
+        semesterId,
+        hasSchedule: selectedDays.length > 0
+      });
+      
+      // Show success feedback
+      setFeedback({ type: 'success', message: 'Course added successfully!' });
+      
+      // Reset form after a brief delay
+      setTimeout(() => {
+        setName('');
+        setCredits(3);
+        setSelectedDays([]);
+        setStartTime('');
+        setEndTime('');
+        setGrade('');
+        setFeedback(null);
+        onClose();
+      }, 1500);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -86,6 +107,17 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
           }
         });
         setErrors(fieldErrors);
+        setFeedback({ type: 'error', message: 'Please fix the validation errors.' });
+      } else {
+        setFeedback({ type: 'error', message: 'Failed to add course. Please try again.' });
+        
+        // Log the error
+        await logCourseCreate('', {
+          courseName: name,
+          credits,
+          semesterId,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -99,6 +131,19 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
           <DialogTitle>Add New Course</DialogTitle>
         </DialogHeader>
         
+        <AnimatePresence>
+          {feedback && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ActionFeedback type={feedback.type} message={feedback.message} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="courseName">Course Name</Label>
@@ -108,6 +153,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
+              disabled={isSubmitting}
               className={errors.name ? 'border-red-500' : ''}
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
@@ -122,6 +168,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
               onChange={(e) => setCredits(parseInt(e.target.value) || 1)}
               min="1"
               max="6"
+              disabled={isSubmitting}
               className={errors.credits ? 'border-red-500' : ''}
             />
             {errors.credits && <p className="text-sm text-red-500">{errors.credits}</p>}
@@ -137,6 +184,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
                       id={day}
                       checked={selectedDays.includes(day)}
                       onCheckedChange={(checked) => handleDayToggle(day, checked as boolean)}
+                      disabled={isSubmitting}
                     />
                     <Label htmlFor={day} className="text-sm font-normal">
                       {day.slice(0, 3)}
@@ -155,6 +203,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
+                disabled={isSubmitting}
                 className={errors.startTime ? 'border-red-500' : ''}
               />
               {errors.startTime && <p className="text-sm text-red-500">{errors.startTime}</p>}
@@ -167,6 +216,7 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
+                disabled={isSubmitting}
                 className={errors.endTime ? 'border-red-500' : ''}
               />
               {errors.endTime && <p className="text-sm text-red-500">{errors.endTime}</p>}
@@ -175,8 +225,8 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
 
           <div className="space-y-2">
             <Label htmlFor="grade">Final Grade - GPA Scale (Optional)</Label>
-            <Select value={grade} onValueChange={setGrade}>
-              <SelectTrigger>
+            <Select value={grade} onValueChange={setGrade} disabled={isSubmitting}>
+              <SelectTrigger className={isSubmitting ? 'opacity-50' : ''}>
                 <SelectValue placeholder="Select grade" />
               </SelectTrigger>
               <SelectContent>
@@ -194,12 +244,28 @@ export function AddCourseDialog({ semesterId, open, onClose }: AddCourseDialogPr
             </Select>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
-              {isSubmitting ? 'Adding...' : 'Add Course'}
+            <Button
+              type="submit"
+              disabled={isSubmitting || !name.trim()}
+              className="min-w-[100px]"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center space-x-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Adding...</span>
+                </div>
+              ) : (
+                'Add Course'
+              )}
             </Button>
           </div>
         </form>

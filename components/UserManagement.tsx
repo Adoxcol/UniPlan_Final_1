@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+
 import { 
   Select,
   SelectContent,
@@ -48,7 +50,9 @@ import {
   createAdminUser,
   hasPermission 
 } from '../lib/adminUtils';
+import { useAuditLogger } from '../hooks/useAuditLogger';
 import { Profile } from '../lib/types';
+import { LoadingSpinner, ActionFeedback } from './ui/loading-states';
 
 interface UserManagementProps {
   onUserUpdate?: () => void;
@@ -61,6 +65,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   
   // Create admin user dialog state
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
@@ -68,6 +73,8 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
   const [creating, setCreating] = useState(false);
+  
+  const { logUserManagement, logAdminAction } = useAuditLogger();
 
   useEffect(() => {
     loadUsers();
@@ -88,28 +95,80 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   };
 
   const handlePromoteUser = async (userId: string) => {
+    const user = users.find(u => u.user_id === userId);
+    setActionLoading(prev => ({ ...prev, [`promote-${userId}`]: true }));
+    
     try {
       setError(null);
+      setSuccess(null);
+      
       await promoteToAdmin(userId);
-      setSuccess('User promoted to admin successfully');
+      
+      // Log successful promotion
+      await logUserManagement('admin_promote', userId, {
+        targetUserName: user?.display_name || user?.first_name || 'Unknown',
+        success: true,
+        method: 'user_management_interface'
+      });
+      
+      setSuccess(`${user?.display_name || 'User'} promoted to admin successfully`);
       await loadUsers();
       onUserUpdate?.();
     } catch (err) {
-      setError('Failed to promote user');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to promote user';
+      setError(errorMessage);
+      
+      // Log failed promotion
+      await logUserManagement('admin_promote', userId, {
+        targetUserName: user?.display_name || user?.first_name || 'Unknown',
+        success: false,
+        error: errorMessage,
+        method: 'user_management_interface'
+      });
+      
       console.error('Error promoting user:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`promote-${userId}`]: false }));
     }
   };
 
   const handleDemoteUser = async (userId: string) => {
+    const user = users.find(u => u.user_id === userId);
+    setActionLoading(prev => ({ ...prev, [`demote-${userId}`]: true }));
+    
     try {
       setError(null);
+      setSuccess(null);
+      
       await demoteFromAdmin(userId);
-      setSuccess('User demoted from admin successfully');
+      
+      // Log successful demotion
+      await logUserManagement('admin_demote', userId, {
+        targetUserName: user?.display_name || user?.first_name || 'Unknown',
+        previousAdminLevel: user?.admin_level || 'admin',
+        success: true,
+        method: 'user_management_interface'
+      });
+      
+      setSuccess(`${user?.display_name || 'User'} demoted from admin successfully`);
       await loadUsers();
       onUserUpdate?.();
     } catch (err) {
-      setError('Failed to demote user');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to demote user';
+      setError(errorMessage);
+      
+      // Log failed demotion
+      await logUserManagement('admin_demote', userId, {
+        targetUserName: user?.display_name || user?.first_name || 'Unknown',
+        previousAdminLevel: user?.admin_level || 'admin',
+        success: false,
+        error: errorMessage,
+        method: 'user_management_interface'
+      });
+      
       console.error('Error demoting user:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`demote-${userId}`]: false }));
     }
   };
 
@@ -122,8 +181,22 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     try {
       setCreating(true);
       setError(null);
+      setSuccess(null);
+      
       await createAdminUser(newAdminEmail, newAdminPassword, 'admin');
-      setSuccess('Admin user created successfully');
+      
+      // Log successful admin creation
+      await logAdminAction('admin_create', 'user', {
+          success: true,
+          details: {
+            targetEmail: newAdminEmail,
+            targetName: newAdminName,
+            adminLevel: 'admin',
+            method: 'manual_creation'
+          }
+        });
+      
+      setSuccess(`Admin user ${newAdminName} created successfully`);
       setShowCreateAdmin(false);
       setNewAdminEmail('');
       setNewAdminPassword('');
@@ -131,7 +204,21 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
       await loadUsers();
       onUserUpdate?.();
     } catch (err) {
-      setError('Failed to create admin user');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create admin user';
+      setError(errorMessage);
+      
+      // Log failed admin creation
+      await logAdminAction('admin_create', 'user', {
+          success: false,
+          errorMessage: errorMessage,
+          details: {
+            targetEmail: newAdminEmail,
+            targetName: newAdminName,
+            adminLevel: 'admin',
+            method: 'manual_creation'
+          }
+        });
+      
       console.error('Error creating admin user:', err);
     } finally {
       setCreating(false);
@@ -215,28 +302,43 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
                 <Button variant="outline" onClick={() => setShowCreateAdmin(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateAdmin} disabled={creating}>
-                  {creating ? 'Creating...' : 'Create Admin'}
+                <Button onClick={handleCreateAdmin} disabled={creating} className="min-w-[120px]">
+                  {creating ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingSpinner size="sm" />
+                      <span>Creating...</span>
+                    </div>
+                  ) : (
+                    'Create Admin'
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        {success && (
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
+      <CardContent className="space-y-4">        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ActionFeedback type="error" message={error} />
+            </motion.div>
+          )}
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ActionFeedback type="success" message={success} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filters */}
         <div className="flex gap-4 items-end">
@@ -276,7 +378,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         {/* Users Table */}
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
             <p className="text-gray-600">Loading users...</p>
           </div>
         ) : (
@@ -330,18 +432,34 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
                               variant="outline"
                               size="sm"
                               onClick={() => handleDemoteUser(user.user_id)}
+                              disabled={actionLoading[`demote-${user.user_id}`]}
+                              className="min-w-[80px]"
                             >
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Demote
+                              {actionLoading[`demote-${user.user_id}`] ? (
+                                <LoadingSpinner size="sm" />
+                              ) : (
+                                <>
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Demote
+                                </>
+                              )}
                             </Button>
                           ) : (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handlePromoteUser(user.user_id)}
+                              disabled={actionLoading[`promote-${user.user_id}`]}
+                              className="min-w-[80px]"
                             >
-                              <Shield className="h-3 w-3 mr-1" />
-                              Promote
+                              {actionLoading[`promote-${user.user_id}`] ? (
+                                <LoadingSpinner size="sm" />
+                              ) : (
+                                <>
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Promote
+                                </>
+                              )}
                             </Button>
                           )}
                         </div>

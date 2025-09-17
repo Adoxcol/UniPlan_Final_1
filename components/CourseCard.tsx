@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { Clock, Star, MoreHorizontal, Edit3, Trash2, Calendar, Award } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Award, Star, MoreHorizontal, Edit3, Trash2, GripVertical, Calendar, Clock } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { EditCourseDialog } from './EditCourseDialog';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -68,10 +64,31 @@ function CourseCardComponent({ course, semesterId }: CourseCardProps) {
     });
   };
 
+  const cardAnimations = {
+    initial: { scale: 1, y: 0 },
+    whileHover: { 
+      scale: 1.02,
+      y: -2,
+      transition: { 
+        type: "spring" as const, 
+        stiffness: 300, 
+        damping: 20,
+        duration: 0.2
+      }
+    },
+    whileTap: { 
+      scale: 0.98,
+      transition: { type: "spring" as const, stiffness: 400, damping: 17 }
+    }
+  };
+
   return (
     <>
-      <Card className="group hover:shadow-lg dark:hover:shadow-xl transition-all duration-300 dark:bg-card/90 dark:border-border/60 hover:scale-[1.02] border-l-4 border-l-transparent hover:border-l-primary/30">
-        <CardContent className="p-5">
+      <motion.div
+        className="group rounded-lg border bg-card text-card-foreground shadow-sm dark:bg-card/90 dark:border-border/60 border-l-4 border-l-transparent hover:border-l-primary/30 hover:shadow-lg dark:hover:shadow-xl"
+        {...cardAnimations}
+      >
+        <div className="p-5">
           <div className="space-y-4">
             {/* Header with course name and actions */}
             <div className="flex items-start justify-between">
@@ -157,8 +174,8 @@ function CourseCardComponent({ course, semesterId }: CourseCardProps) {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
 
       <EditCourseDialog
         course={course}

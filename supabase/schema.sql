@@ -560,6 +560,72 @@ create policy "degree_template_courses_delete" on public.degree_template_courses
     )
   );
 
+-- Audit Logs table: tracks admin activities and user actions for monitoring
+create table public.audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  admin_user_id uuid references auth.users(id) on delete set null,
+  action text not null,
+  resource_type text not null,
+  resource_id text,
+  details jsonb,
+  ip_address inet,
+  user_agent text,
+  success boolean default true not null,
+  error_message text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  
+  -- Constraints
+  constraint audit_logs_action_length check (length(trim(action)) >= 1 and length(trim(action)) <= 100),
+  constraint audit_logs_resource_type_length check (length(trim(resource_type)) >= 1 and length(trim(resource_type)) <= 50),
+  constraint audit_logs_resource_id_length check (resource_id is null or length(trim(resource_id)) <= 100),
+  constraint audit_logs_error_message_length check (error_message is null or length(error_message) <= 1000),
+  constraint audit_logs_user_agent_length check (user_agent is null or length(user_agent) <= 500),
+  constraint audit_logs_action_valid check (action in (
+    'user_login', 'user_logout', 'user_register', 'user_delete',
+    'profile_create', 'profile_update', 'profile_delete',
+    'semester_create', 'semester_update', 'semester_delete',
+    'course_create', 'course_update', 'course_delete',
+    'admin_promote', 'admin_demote', 'admin_create',
+    'template_create', 'template_update', 'template_delete', 'template_publish',
+    'plan_share', 'plan_unshare', 'plan_access',
+    'system_backup', 'system_restore', 'system_maintenance',
+    'data_export', 'data_import', 'bulk_operation'
+  )),
+  constraint audit_logs_resource_type_valid check (resource_type in (
+    'user', 'profile', 'semester', 'course', 'template', 'shared_plan', 'system', 'auth'
+  ))
+);
+
+-- Indexes for audit logs performance
+create index idx_audit_logs_user_id on public.audit_logs(user_id);
+create index idx_audit_logs_admin_user_id on public.audit_logs(admin_user_id);
+create index idx_audit_logs_action on public.audit_logs(action);
+create index idx_audit_logs_resource_type on public.audit_logs(resource_type);
+create index idx_audit_logs_created_at on public.audit_logs(created_at desc);
+create index idx_audit_logs_success on public.audit_logs(success) where success = false;
+create index idx_audit_logs_admin_actions on public.audit_logs(admin_user_id, action, created_at desc) where admin_user_id is not null;
+
+-- Enable RLS on audit logs
+alter table public.audit_logs enable row level security;
+
+-- Audit logs policies - only admins can view audit logs
+create policy "audit_logs_select_admin" on public.audit_logs 
+  for select using (
+    exists (
+      select 1 from public.profiles 
+      where user_id = auth.uid() 
+      and admin_level in ('admin', 'super_admin')
+    )
+  );
+
+-- Only system/admin can insert audit logs (via service role or admin functions)
+create policy "audit_logs_insert_system" on public.audit_logs 
+  for insert with check (true); -- Will be controlled by application logic
+
+-- No updates or deletes allowed on audit logs for data integrity
+-- (audit logs should be immutable once created)
+
 -- Public profile viewing policy
 create policy "profiles_select_public" on public.profiles 
   for select using (profile_public = true or auth.uid() = user_id);
@@ -575,11 +641,13 @@ grant all on public.shared_plan_courses to anon, authenticated;
 grant all on public.degree_templates to anon, authenticated;
 grant all on public.degree_template_semesters to anon, authenticated;
 grant all on public.degree_template_courses to anon, authenticated;
+grant all on public.audit_logs to anon, authenticated;
 
 -- Comments for documentation
 comment on table public.profiles is 'User profiles containing global notes and degree information';
 comment on table public.semesters is 'Academic semesters with courses and scheduling';
 comment on table public.courses is 'Individual courses within semesters';
+comment on table public.audit_logs is 'Audit trail for tracking admin activities and user actions';
 
 comment on column public.profiles.notes is 'Global user notes (max 10,000 characters)';
 comment on column public.profiles.degree_name is 'Name of the degree program';

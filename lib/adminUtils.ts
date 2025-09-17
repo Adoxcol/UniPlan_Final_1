@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { Profile } from './types';
+import { auditService } from './auditService';
 
 export type AdminLevel = 'user' | 'moderator' | 'admin' | 'super_admin';
 
@@ -174,8 +175,21 @@ export async function updateUserAdminStatus(
     .eq('user_id', userId);
 
   if (error) {
+    // Log failed attempt
+    await auditService.logUserManagement(
+      isAdmin ? 'admin_promote' : 'admin_demote',
+      userId,
+      { admin_level: adminLevel, success: false, error: error.message }
+    );
     throw new Error(`Failed to update user admin status: ${error.message}`);
   }
+
+  // Log successful admin status change
+  await auditService.logUserManagement(
+    isAdmin ? 'admin_promote' : 'admin_demote',
+    userId,
+    { admin_level: adminLevel, previous_status: !isAdmin }
+  );
 }
 
 /**
@@ -193,6 +207,10 @@ export async function createAdminUser(
   });
 
   if (authError || !authData.user) {
+    // Log failed user creation
+    await auditService.logAdminAction('admin_create', 'user', {
+      details: { email, admin_level: adminLevel, success: false, error: authError?.message }
+    });
     throw new Error(`Failed to create admin user: ${authError?.message}`);
   }
 
@@ -209,8 +227,19 @@ export async function createAdminUser(
     .single();
 
   if (profileError) {
+    // Log failed profile update
+    await auditService.logAdminAction('admin_create', 'user', {
+      resourceId: authData.user.id,
+      details: { email, admin_level: adminLevel, success: false, error: profileError.message }
+    });
     throw new Error(`Failed to set admin status: ${profileError.message}`);
   }
+
+  // Log successful admin user creation
+  await auditService.logAdminAction('admin_create', 'user', {
+    resourceId: authData.user.id,
+    details: { email, admin_level: adminLevel, user_id: authData.user.id }
+  });
 
   return {
     user: authData.user,
@@ -249,8 +278,20 @@ export async function promoteToAdmin(userId: string, adminLevel: AdminLevel = 'a
 
   if (!response.ok) {
     const error = await response.json();
+    // Log failed promotion
+    await auditService.logUserManagement('admin_promote', userId, {
+      admin_level: adminLevel,
+      success: false,
+      error: error.error || 'Failed to promote user'
+    });
     throw new Error(error.error || 'Failed to promote user');
   }
+
+  // Log successful promotion
+  await auditService.logUserManagement('admin_promote', userId, {
+    admin_level: adminLevel,
+    method: 'api_route'
+  });
 }
 
 /**
@@ -284,8 +325,19 @@ export async function demoteFromAdmin(userId: string): Promise<void> {
 
   if (!response.ok) {
     const error = await response.json();
+    // Log failed demotion
+    await auditService.logUserManagement('admin_demote', userId, {
+      success: false,
+      error: error.error || 'Failed to demote user'
+    });
     throw new Error(error.error || 'Failed to demote user');
   }
+
+  // Log successful demotion
+  await auditService.logUserManagement('admin_demote', userId, {
+    method: 'api_route',
+    previous_admin_level: 'unknown'
+  });
 }
 
 /**
