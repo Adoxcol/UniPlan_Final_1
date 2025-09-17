@@ -83,14 +83,25 @@ export const importDataSchema = z.object({
       endTime: z.string().optional(),
       grade: z.number().optional().nullable()
     }))
-  })),
+  })).optional(),
   notes: z.string().optional(),
   degree: z.object({
     name: z.string(),
-    totalCreditsRequired: z.number()
+    totalCreditsRequired: z.number().optional(),
+    // Support legacy totalCredits property for backward compatibility
+    totalCredits: z.number().optional()
   }).optional().nullable(),
   exportDate: z.string().optional(),
   version: z.string().optional()
+}).refine((data) => {
+  // If degree is provided and has totalCredits but not totalCreditsRequired, that's ok
+  // If degree is provided, it should have at least a name
+  if (data.degree && !data.degree.name) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Degree must have at least a name if provided"
 });
 
 // Notes validation schema

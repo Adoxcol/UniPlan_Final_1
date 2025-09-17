@@ -742,12 +742,24 @@ export const useAppStore = create<AppState>()(
             degree: currentState.degree
           });
           
+          // Normalize degree data to handle legacy properties
+          let normalizedDegree = null;
+          if (validatedData.degree) {
+            normalizedDegree = {
+              name: validatedData.degree.name,
+              // Use totalCreditsRequired if available, otherwise fall back to totalCredits, or default to 120
+              totalCreditsRequired: validatedData.degree.totalCreditsRequired || 
+                                  (validatedData.degree as any).totalCredits || 
+                                  120
+            };
+          }
+          
           // Replace current state with imported data
           // Use fallback values to handle partial imports gracefully
           set({
             semesters: validatedData.semesters || [],
             notes: validatedData.notes || '',
-            degree: validatedData.degree || null,
+            degree: normalizedDegree,
             // Set current semester to first imported semester for better UX
             currentSemester: validatedData.semesters?.[0]?.id || null
           });
