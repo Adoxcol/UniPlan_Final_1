@@ -1,13 +1,18 @@
 'use client';
 
-import { memo, useMemo } from 'react';
-import { BookOpen, TrendingUp, Award, Target } from 'lucide-react';
+import { memo, useMemo, useState } from 'react';
+import { BookOpen, TrendingUp, Award, Target, Edit2, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useAppStore } from '@/lib/store';
 
 function ProgressSectionComponent() {
-  const { semesters, calculateCumulativeGPA, degree } = useAppStore();
+  const { semesters, calculateCumulativeGPA, degree, setDegree } = useAppStore();
+  const [isEditingCredits, setIsEditingCredits] = useState(false);
+  const [editCreditsValue, setEditCreditsValue] = useState('');
   
   // Memoize expensive calculations
   const progressStats = useMemo(() => {
@@ -29,6 +34,58 @@ function ProgressSectionComponent() {
       semesterProgressPercentage
     };
   }, [semesters, calculateCumulativeGPA, degree]);
+
+  // Handle editing degree credits
+  const handleStartEditCredits = () => {
+    if (degree) {
+      setEditCreditsValue(degree.totalCreditsRequired.toString());
+      setIsEditingCredits(true);
+    }
+  };
+
+  const handleSaveCredits = () => {
+    const newCredits = parseInt(editCreditsValue);
+    
+    if (!degree) {
+      toast.error('No degree information found');
+      return;
+    }
+    
+    if (isNaN(newCredits)) {
+      toast.error('Please enter a valid number');
+      return;
+    }
+    
+    if (newCredits < 30) {
+      toast.error('Total credits must be at least 30');
+      return;
+    }
+    
+    if (newCredits > 300) {
+      toast.error('Total credits cannot exceed 300');
+      return;
+    }
+    
+    setDegree({
+      ...degree,
+      totalCreditsRequired: newCredits
+    });
+    setIsEditingCredits(false);
+    toast.success(`Degree credits updated to ${newCredits}`);
+  };
+
+  const handleCancelEditCredits = () => {
+    setIsEditingCredits(false);
+    setEditCreditsValue('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveCredits();
+    } else if (e.key === 'Escape') {
+      handleCancelEditCredits();
+    }
+  };
   
   if (progressStats.totalCredits === 0) return null;
 
@@ -44,19 +101,64 @@ function ProgressSectionComponent() {
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="group">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                 <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">
                   {degree ? 'Degree Credits' : 'Total Credits'}
                 </p>
-                <p className="text-2xl font-bold">
-                  {degree ? degree.totalCreditsRequired : progressStats.totalCredits}
-                </p>
+                {degree && isEditingCredits ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      type="number"
+                      value={editCreditsValue}
+                      onChange={(e) => setEditCreditsValue(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      className="h-8 w-20 text-lg font-bold"
+                      min="30"
+                      max="300"
+                      step="1"
+                      autoFocus
+                      placeholder="120"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleSaveCredits}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Check className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleCancelEditCredits}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-bold">
+                      {degree ? degree.totalCreditsRequired : progressStats.totalCredits}
+                    </p>
+                    {degree && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleStartEditCredits}
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Edit2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

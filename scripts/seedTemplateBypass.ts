@@ -189,19 +189,19 @@ async function main() {
     const systemUserId = await createSystemUser()
     console.log('✓ System user ready:', systemUserId)
 
-    // Define the complete BBA template following the exact curriculum
-    const bbaTemplate: UniversityTemplateData = {
-      name: "Bachelor of Business Administration (BBA)",
-      description: "A comprehensive 4-year undergraduate program in Business Administration from North South University. The program provides students with a solid foundation in business principles and practices.",
+    // Define the Finance template following the exact curriculum
+    const financeTemplate: UniversityTemplateData = {
+      name: "Bachelor of Business Administration - Major in Finance",
+      description: "A comprehensive 4-year undergraduate program in Finance from North South University. The program provides students with a solid foundation in financial principles, investment analysis, and corporate finance.",
       university: "North South University",
-      major: "Business Administration",
-      totalCredits: 132, // Corrected total: 132 credits across 12 semesters
+      major: "Finance",
+      totalCredits: 127,
       durationYears: 4,
-      tags: ["Business", "Administration", "Management", "Finance", "Marketing", "Bangladesh", "NSU"],
+      tags: ["Finance", "Business", "Investment", "Banking", "Corporate Finance", "Bangladesh", "NSU"],
       semesters: [
-        // 1st Semester (Year 1, Autumn)
+        // 1st Semester (Year 1)
         {
-          name: "Semester 1 (Year 1)",
+          name: "Semester 1",
           year: 1,
           season: "Autumn",
           courses: [
@@ -210,129 +210,124 @@ async function main() {
             { name: "MIS107: Management Information Systems", code: "MIS107", credits: 3 }
           ]
         },
-        // 2nd Semester (Year 1, Spring)
+        // 2nd Semester (Year 1)
         {
-          name: "Semester 2 (Year 1)",
+          name: "Semester 2",
           year: 1,
-          season: "Spring",
-          courses: [
-            { name: "ECO101: Principles of Economics I", code: "ECO101", credits: 3 },
-            { name: "ENG103: English Composition III", code: "ENG103", credits: 3 },
-            { name: "Humanities - 1", code: "HUM101", credits: 3 },
-            { name: "Social Science - 1", code: "SOC101", credits: 3 }
-          ]
-        },
-        // 3rd Semester (Year 1, Summer)
-        {
-          name: "Semester 3 (Year 1)",
-          year: 1,
-          season: "Summer",
-          courses: [
-            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
-            { name: "ECO104: Microeconomics", code: "ECO104", credits: 3 },
-            { name: "ENG105: Advanced English", code: "ENG105", credits: 3 },
-            { name: "Humanities - 2", code: "HUM102", credits: 3 }
-          ]
-        },
-        // 4th Semester (Year 2, Autumn)
-        {
-          name: "Semester 4 (Year 2)",
-          year: 2,
-          season: "Autumn",
-          courses: [
-            { name: "ACT201: Principles of Accounting I", code: "ACT201", credits: 3 },
-            { name: "BEN205: Bengali/ENG115/CHN101", code: "BEN205", credits: 3 },
-            { name: "MKT202: Principles of Marketing", code: "MKT202", credits: 3 },
-            { name: "BUS173: Business Mathematics", code: "BUS173", credits: 3 }
-          ]
-        },
-        // 5th Semester (Year 2, Spring)
-        {
-          name: "Semester 5 (Year 2)",
-          year: 2,
           season: "Spring",
           courses: [
             { name: "ACT202: Principles of Accounting II", code: "ACT202", credits: 3 },
-            { name: "FIN254: Business Finance", code: "FIN254", credits: 3 },
-            { name: "MGT212: Principles of Management", code: "MGT212", credits: 3 },
-            { name: "Science - 1", code: "SCI101", credits: 3 }
+            { name: "ENG103: English Composition III", code: "ENG103", credits: 3 },
+            { name: "ECO104: Microeconomics", code: "ECO104", credits: 3 },
+            { name: "MIS107: Management Information Systems", code: "MIS107", credits: 3 }
           ]
         },
-        // 6th Semester (Year 2, Summer)
+        // 3rd Semester (Year 1)
         {
-          name: "Semester 6 (Year 2)",
+          name: "Semester 3",
+          year: 1,
+          season: "Summer",
+          courses: [
+            { name: "FIN254: Business Finance", code: "FIN254", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "BUS173: Business Mathematics", code: "BUS173", credits: 3 },
+            { name: "Humanities 1", code: "HUM101", credits: 3 }
+          ]
+        },
+        // 4th Semester (Year 2)
+        {
+          name: "Semester 4",
+          year: 2,
+          season: "Autumn",
+          courses: [
+            { name: "FIN318: Corporate Finance", code: "FIN318", credits: 3 },
+            { name: "BUS251: Business Law", code: "BUS251", credits: 3 },
+            { name: "Social Science 1", code: "SOC101", credits: 3 },
+            { name: "Humanities 2", code: "HUM102", credits: 3 }
+          ]
+        },
+        // 5th Semester (Year 2)
+        {
+          name: "Semester 5",
+          year: 2,
+          season: "Spring",
+          courses: [
+            { name: "FIN433: Investment Analysis", code: "FIN433", credits: 3 },
+            { name: "BEN205: Bengali/ENG115/CHN101", code: "BEN205", credits: 3 },
+            { name: "BUS135: Business Communication", code: "BUS135", credits: 3 },
+            { name: "Open Elective 1", code: "OE101", credits: 3 }
+          ]
+        },
+        // 6th Semester (Year 2)
+        {
+          name: "Semester 6",
           year: 2,
           season: "Summer",
           courses: [
-            { name: "BUS251: Business Law", code: "BUS251", credits: 3 },
-            { name: "BUS135: Business Communication", code: "BUS135", credits: 3 },
-            { name: "INB372: International Business", code: "INB372", credits: 3 },
-            { name: "Science - 2", code: "SCI102", credits: 3 }
+            { name: "FIN440: Financial Markets", code: "FIN440", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "Science 2", code: "SCI102", credits: 3 },
+            { name: "Humanities 1", code: "HUM101", credits: 3 }
           ]
         },
-        // 7th Semester (Year 3, Autumn)
+        // 7th Semester (Year 3)
         {
-          name: "Semester 7 (Year 3)",
+          name: "Semester 7",
           year: 3,
           season: "Autumn",
           courses: [
-            { name: "Major - 1", code: "MAJ101", credits: 3 },
-            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
-            { name: "MIS207: Database Management", code: "MIS207", credits: 3 },
-            { name: "Science - 3", code: "SCI103", credits: 3 }
+            { name: "Major Elective 1", code: "ME101", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "BUS135: Business Communication", code: "BUS135", credits: 3 }
           ]
         },
-        // 8th Semester (Year 3, Spring)
+        // 8th Semester (Year 3)
         {
-          name: "Semester 8 (Year 3)",
+          name: "Semester 8",
           year: 3,
           season: "Spring",
           courses: [
-            { name: "Major - 2", code: "MAJ102", credits: 3 },
-            { name: "Free Elective - 1", code: "ELE101", credits: 3 },
-            { name: "Business Law II", code: "LAW200", credits: 3 },
-            { name: "MGT351: Strategic Management", code: "MGT351", credits: 3 }
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
+            { name: "Lab course/any one ISAC", code: "LAB101", credits: 1 }
           ]
         },
-        // 9th Semester (Year 3, Summer)
+        // 9th Semester (Year 3)
         {
-          name: "Semester 9 (Year 3)",
+          name: "Semester 9",
           year: 3,
           season: "Summer",
           courses: [
-            { name: "Major - 3", code: "MAJ103", credits: 3 },
-            { name: "Free Elective - 2", code: "ELE102", credits: 3 },
-            { name: "MGT368: Operations Management", code: "MGT368", credits: 3 },
-            { name: "Science - 4", code: "SCI104", credits: 3 }
+            { name: "PHI101: Philosophy", code: "PHI101", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
+            { name: "Open Elective 3", code: "OE103", credits: 3 }
           ]
         },
-        // 10th Semester (Year 4, Autumn)
+        // 10th Semester (Year 4)
         {
-          name: "Semester 10 (Year 4)",
+          name: "Semester 10",
           year: 4,
           season: "Autumn",
           courses: [
-            { name: "Major - 4", code: "MAJ104", credits: 3 },
-            { name: "Major Elective - 1", code: "MAJE101", credits: 3 },
-            { name: "Free Elective - 3", code: "ELE103", credits: 3 },
-            { name: "Humanities - 3", code: "HUM103", credits: 3 }
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
+            { name: "Lab course/any one ISAC", code: "LAB101", credits: 1 }
           ]
         },
-        // 11th Semester (Year 4, Spring)
+        // 11th Semester (Year 4)
         {
-          name: "Semester 11 (Year 4)",
+          name: "Semester 11",
           year: 4,
           season: "Spring",
           courses: [
-            { name: "Social Science - 2", code: "SOC102", credits: 3 },
-            { name: "Major Elective - 2", code: "MAJE102", credits: 3 },
-            { name: "GED Elective", code: "GED101", credits: 3 },
-            { name: "MGT489: Business Capstone", code: "MGT489", credits: 3 }
+            { name: "PHI101: Philosophy", code: "PHI101", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 },
+            { name: "Open Elective 3", code: "OE103", credits: 3 }
           ]
         },
-        // 12th Semester (Year 4, Summer)
+        // 12th Semester (Year 4)
         {
-          name: "Semester 12 (Year 4)",
+          name: "Semester 12",
           year: 4,
           season: "Summer",
           courses: [
@@ -342,12 +337,349 @@ async function main() {
       ]
     };
 
-    // Seed the template
-    const templateId = await seedTemplateBypass(bbaTemplate, systemUserId)
-    console.log('\n🎉 BBA template seeded successfully!')
-    console.log('Template ID:', templateId)
-    console.log('Total semesters:', bbaTemplate.semesters.length)
-    console.log('Total courses:', bbaTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
+    // Define the Accounting template following the exact curriculum
+    const accountingTemplate: UniversityTemplateData = {
+      name: "Bachelor of Business Administration - Major in Accounting",
+      description: "A comprehensive 4-year undergraduate program in Accounting from North South University. The program provides students with a solid foundation in accounting principles, auditing, and financial reporting.",
+      university: "North South University",
+      major: "Accounting",
+      totalCredits: 127,
+      durationYears: 4,
+      tags: ["Accounting", "Business", "Auditing", "Financial Reporting", "CPA", "Bangladesh", "NSU"],
+      semesters: [
+        // 1st Semester (Year 1)
+        {
+          name: "Semester 1",
+          year: 1,
+          season: "Autumn",
+          courses: [
+            { name: "ENG102: English Composition II", code: "ENG102", credits: 3 },
+            { name: "ACT201: Principles of Accounting I", code: "ACT201", credits: 3 },
+            { name: "MIS107: Management Information Systems", code: "MIS107", credits: 3 }
+          ]
+        },
+        // 2nd Semester (Year 1)
+        {
+          name: "Semester 2",
+          year: 1,
+          season: "Spring",
+          courses: [
+            { name: "BEN205: Bengali/ENG115/CHN101", code: "BEN205", credits: 3 },
+            { name: "ECO104: Microeconomics", code: "ECO104", credits: 3 },
+            { name: "Social Science 1", code: "SOC101", credits: 3 },
+            { name: "Humanities 1", code: "HUM101", credits: 3 }
+          ]
+        },
+        // 3rd Semester (Year 1)
+        {
+          name: "Semester 3",
+          year: 1,
+          season: "Summer",
+          courses: [
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "Science 2", code: "SCI102", credits: 3 }
+          ]
+        },
+        // 4th Semester (Year 2)
+        {
+          name: "Semester 4",
+          year: 2,
+          season: "Autumn",
+          courses: [
+            { name: "ACT179: Cost Accounting", code: "ACT179", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "Major Elective 1", code: "ME101", credits: 3 }
+          ]
+        },
+        // 5th Semester (Year 2)
+        {
+          name: "Semester 5",
+          year: 2,
+          season: "Spring",
+          courses: [
+            { name: "ACT179: Cost Accounting", code: "ACT179", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "Major Elective 1", code: "ME101", credits: 3 }
+          ]
+        },
+        // 6th Semester (Year 2)
+        {
+          name: "Semester 6",
+          year: 2,
+          season: "Summer",
+          courses: [
+            { name: "Social Science 2", code: "SOC102", credits: 3 },
+            { name: "BUS172: Business Statistics", code: "BUS172", credits: 3 },
+            { name: "Major Elective 1", code: "ME101", credits: 3 }
+          ]
+        },
+        // 7th Semester (Year 3)
+        {
+          name: "Semester 7",
+          year: 3,
+          season: "Autumn",
+          courses: [
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 }
+          ]
+        },
+        // 8th Semester (Year 3)
+        {
+          name: "Semester 8",
+          year: 3,
+          season: "Spring",
+          courses: [
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 }
+          ]
+        },
+        // 9th Semester (Year 3)
+        {
+          name: "Semester 9",
+          year: 3,
+          season: "Summer",
+          courses: [
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 }
+          ]
+        },
+        // 10th Semester (Year 4)
+        {
+          name: "Semester 10",
+          year: 4,
+          season: "Autumn",
+          courses: [
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 }
+          ]
+        },
+        // 11th Semester (Year 4)
+        {
+          name: "Semester 11",
+          year: 4,
+          season: "Spring",
+          courses: [
+            { name: "Major Elective 2", code: "ME102", credits: 3 },
+            { name: "Open Elective 2", code: "OE102", credits: 3 },
+            { name: "MGT314: Organizational Behavior", code: "MGT314", credits: 3 }
+          ]
+        },
+        // 12th Semester (Year 4)
+        {
+          name: "Semester 12",
+          year: 4,
+          season: "Summer",
+          courses: [
+            { name: "BUS498: Business Internship", code: "BUS498", credits: 3 }
+          ]
+        }
+      ]
+    };
+
+    // Define the Microbiology template following the exact curriculum
+    const microbiologyTemplate: UniversityTemplateData = {
+      name: "Bachelor of Science - Major in Microbiology",
+      description: "A comprehensive 4-year undergraduate program in Microbiology from North South University. The program provides students with a solid foundation in microbiology, biochemistry, and related biological sciences.",
+      university: "North South University",
+      major: "Microbiology",
+      totalCredits: 130,
+      durationYears: 4,
+      tags: ["Microbiology", "Biology", "Science", "Research", "Laboratory", "Bangladesh", "NSU"],
+      semesters: [
+        // 1st Semester (Year 1)
+        {
+          name: "Semester 1",
+          year: 1,
+          season: "Spring",
+          courses: [
+            { name: "ENG103: English Composition", code: "ENG103", credits: 3 },
+            { name: "MAT110: Calculus I", code: "MAT110", credits: 3 },
+            { name: "CHE109: General Chemistry I", code: "CHE109", credits: 3 },
+            { name: "CHE110: General Chemistry I Lab", code: "CHE110", credits: 1 },
+            { name: "BIO103: Principles of Biology I", code: "BIO103", credits: 3 },
+            { name: "BIO104: Principles of Biology I Lab", code: "BIO104", credits: 1 }
+          ]
+        },
+        // 2nd Semester (Year 1)
+        {
+          name: "Semester 2",
+          year: 1,
+          season: "Summer",
+          courses: [
+            { name: "ENG104: English Composition II", code: "ENG104", credits: 3 },
+            { name: "MAT111: Calculus II", code: "MAT111", credits: 3 },
+            { name: "CHE111: General Chemistry II", code: "CHE111", credits: 3 },
+            { name: "CHE112: General Chemistry II Lab", code: "CHE112", credits: 1 },
+            { name: "BIO105: Principles of Biology II", code: "BIO105", credits: 3 },
+            { name: "BIO106: Principles of Biology II Lab", code: "BIO106", credits: 1 }
+          ]
+        },
+        // 3rd Semester (Year 1)
+        {
+          name: "Semester 3",
+          year: 1,
+          season: "Autumn",
+          courses: [
+            { name: "PHY107: Physics I", code: "PHY107", credits: 3 },
+            { name: "PHY108: Physics I Lab", code: "PHY108", credits: 1 },
+            { name: "CHE201: Organic Chemistry I", code: "CHE201", credits: 3 },
+            { name: "CHE202: Organic Chemistry I Lab", code: "CHE202", credits: 1 },
+            { name: "BIO201: Cell Biology", code: "BIO201", credits: 3 },
+            { name: "BIO202: Cell Biology Lab", code: "BIO202", credits: 1 }
+          ]
+        },
+        // 4th Semester (Year 2)
+        {
+          name: "Semester 4",
+          year: 2,
+          season: "Spring",
+          courses: [
+            { name: "PHY109: Physics II", code: "PHY109", credits: 3 },
+            { name: "PHY110: Physics II Lab", code: "PHY110", credits: 1 },
+            { name: "CHE203: Organic Chemistry II", code: "CHE203", credits: 3 },
+            { name: "CHE204: Organic Chemistry II Lab", code: "CHE204", credits: 1 },
+            { name: "BIO203: Genetics", code: "BIO203", credits: 3 },
+            { name: "BIO204: Genetics Lab", code: "BIO204", credits: 1 }
+          ]
+        },
+        // 5th Semester (Year 2)
+        {
+          name: "Semester 5",
+          year: 2,
+          season: "Summer",
+          courses: [
+            { name: "MAT205: Statistics", code: "MAT205", credits: 3 },
+            { name: "CHE301: Biochemistry I", code: "CHE301", credits: 3 },
+            { name: "CHE302: Biochemistry I Lab", code: "CHE302", credits: 1 },
+            { name: "MIC201: Introduction to Microbiology", code: "MIC201", credits: 3 },
+            { name: "MIC202: Introduction to Microbiology Lab", code: "MIC202", credits: 1 }
+          ]
+        },
+        // 6th Semester (Year 2)
+        {
+          name: "Semester 6",
+          year: 2,
+          season: "Autumn",
+          courses: [
+            { name: "CHE303: Biochemistry II", code: "CHE303", credits: 3 },
+            { name: "CHE304: Biochemistry II Lab", code: "CHE304", credits: 1 },
+            { name: "MIC301: Bacterial Physiology", code: "MIC301", credits: 3 },
+            { name: "MIC302: Bacterial Physiology Lab", code: "MIC302", credits: 1 },
+            { name: "BIO301: Molecular Biology", code: "BIO301", credits: 3 },
+            { name: "BIO302: Molecular Biology Lab", code: "BIO302", credits: 1 }
+          ]
+        },
+        // 7th Semester (Year 3)
+        {
+          name: "Semester 7",
+          year: 3,
+          season: "Spring",
+          courses: [
+            { name: "MIC303: Virology", code: "MIC303", credits: 3 },
+            { name: "MIC304: Virology Lab", code: "MIC304", credits: 1 },
+            { name: "MIC305: Immunology", code: "MIC305", credits: 3 },
+            { name: "MIC306: Immunology Lab", code: "MIC306", credits: 1 },
+            { name: "BIO303: Ecology", code: "BIO303", credits: 3 },
+            { name: "General Education Elective", code: "GED101", credits: 3 }
+          ]
+        },
+        // 8th Semester (Year 3)
+        {
+          name: "Semester 8",
+          year: 3,
+          season: "Summer",
+          courses: [
+            { name: "MIC401: Medical Microbiology", code: "MIC401", credits: 3 },
+            { name: "MIC402: Medical Microbiology Lab", code: "MIC402", credits: 1 },
+            { name: "MIC403: Environmental Microbiology", code: "MIC403", credits: 3 },
+            { name: "MIC404: Environmental Microbiology Lab", code: "MIC404", credits: 1 },
+            { name: "BIO401: Biotechnology", code: "BIO401", credits: 3 },
+            { name: "General Education Elective", code: "GED102", credits: 3 }
+          ]
+        },
+        // 9th Semester (Year 3)
+        {
+          name: "Semester 9",
+          year: 3,
+          season: "Autumn",
+          courses: [
+            { name: "MIC405: Food Microbiology", code: "MIC405", credits: 3 },
+            { name: "MIC406: Food Microbiology Lab", code: "MIC406", credits: 1 },
+            { name: "MIC407: Industrial Microbiology", code: "MIC407", credits: 3 },
+            { name: "MIC408: Industrial Microbiology Lab", code: "MIC408", credits: 1 },
+            { name: "BIO403: Bioinformatics", code: "BIO403", credits: 3 },
+            { name: "Major Elective", code: "ME101", credits: 3 }
+          ]
+        },
+        // 10th Semester (Year 4)
+        {
+          name: "Semester 10",
+          year: 4,
+          season: "Spring",
+          courses: [
+            { name: "MIC409: Microbial Genetics", code: "MIC409", credits: 3 },
+            { name: "MIC410: Microbial Genetics Lab", code: "MIC410", credits: 1 },
+            { name: "MIC411: Research Methodology", code: "MIC411", credits: 3 },
+            { name: "BIO405: Bioethics", code: "BIO405", credits: 3 },
+            { name: "Major Elective", code: "ME102", credits: 3 },
+            { name: "Open Elective", code: "OE101", credits: 3 }
+          ]
+        },
+        // 11th Semester (Year 4)
+        {
+          name: "Semester 11",
+          year: 4,
+          season: "Summer",
+          courses: [
+            { name: "MIC497: Research Project I", code: "MIC497", credits: 3 },
+            { name: "MIC413: Advanced Microbiology", code: "MIC413", credits: 3 },
+            { name: "MIC414: Advanced Microbiology Lab", code: "MIC414", credits: 1 },
+            { name: "Major Elective", code: "ME103", credits: 3 },
+            { name: "Open Elective", code: "OE102", credits: 3 }
+          ]
+        },
+        // 12th Semester (Year 4)
+        {
+          name: "Semester 12",
+          year: 4,
+          season: "Autumn",
+          courses: [
+            { name: "MIC498: Research Project II", code: "MIC498", credits: 3 },
+            { name: "MIC499: Internship", code: "MIC499", credits: 3 },
+            { name: "Major Elective", code: "ME104", credits: 3 },
+            { name: "Open Elective", code: "OE103", credits: 3 }
+          ]
+        }
+      ]
+    };
+
+    // Seed all templates
+    console.log('\n🚀 Starting template seeding process...')
+    
+    const financeTemplateId = await seedTemplateBypass(financeTemplate, systemUserId)
+    console.log('\n🎉 Finance template seeded successfully!')
+    console.log('Template ID:', financeTemplateId)
+    console.log('Total semesters:', financeTemplate.semesters.length)
+    console.log('Total courses:', financeTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
+
+    const accountingTemplateId = await seedTemplateBypass(accountingTemplate, systemUserId)
+    console.log('\n🎉 Accounting template seeded successfully!')
+    console.log('Template ID:', accountingTemplateId)
+    console.log('Total semesters:', accountingTemplate.semesters.length)
+    console.log('Total courses:', accountingTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
+
+    const microbiologyTemplateId = await seedTemplateBypass(microbiologyTemplate, systemUserId)
+    console.log('\n🎉 Microbiology template seeded successfully!')
+    console.log('Template ID:', microbiologyTemplateId)
+    console.log('Total semesters:', microbiologyTemplate.semesters.length)
+    console.log('Total courses:', microbiologyTemplate.semesters.reduce((sum, sem) => sum + sem.courses.length, 0))
+
+    console.log('\n✅ All templates seeded successfully!')
 
   } catch (error) {
     console.error('Main process failed:', error)

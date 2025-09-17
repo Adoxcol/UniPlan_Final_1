@@ -127,16 +127,28 @@ export async function getAllUsers(): Promise<Profile[]> {
     throw new Error('Insufficient permissions to view users');
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw new Error(`Failed to fetch users: ${error.message}`);
+  // Get the current session to pass the auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('No valid session found');
   }
 
-  return data || [];
+  // Call the admin API route that uses service role key
+  const response = await fetch('/api/admin/users', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch users');
+  }
+
+  const result = await response.json();
+  return result.users || [];
 }
 
 /**
@@ -215,17 +227,29 @@ export async function promoteToAdmin(userId: string, adminLevel: AdminLevel = 'a
     throw new Error('Insufficient permissions to promote users');
   }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      is_admin: true,
-      admin_level: adminLevel,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId);
+  // Get the current session to pass the auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('No valid session found');
+  }
 
-  if (error) {
-    throw new Error(`Failed to promote user: ${error.message}`);
+  // Call the admin API route that uses service role key
+  const response = await fetch('/api/admin/users', {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      isAdmin: true,
+      adminLevel,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to promote user');
   }
 }
 
@@ -238,17 +262,29 @@ export async function demoteFromAdmin(userId: string): Promise<void> {
     throw new Error('Insufficient permissions to demote users');
   }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      is_admin: false,
-      admin_level: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId);
+  // Get the current session to pass the auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('No valid session found');
+  }
 
-  if (error) {
-    throw new Error(`Failed to demote user: ${error.message}`);
+  // Call the admin API route that uses service role key
+  const response = await fetch('/api/admin/users', {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      isAdmin: false,
+      adminLevel: null,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to demote user');
   }
 }
 

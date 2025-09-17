@@ -386,35 +386,89 @@ export const useAppStore = create<AppState>()(
       },
 
       exportToPDF: async () => {
-        // Will implement PDF export functionality
         const { jsPDF } = await import('jspdf');
         const html2canvas = (await import('html2canvas')).default;
+        const { createRoot } = await import('react-dom/client');
+        const React = await import('react');
         
-        const element = document.getElementById('uniplan-content');
-        if (!element) return;
+        // Create a temporary container for the PDF export view
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.width = '210mm'; // A4 width
+        tempContainer.style.backgroundColor = 'white';
+        document.body.appendChild(tempContainer);
         
-        const canvas = await html2canvas(element);
-        const imgData = canvas.toDataURL('image/png');
-        
-        const pdf = new jsPDF();
-        const imgWidth = 210;
-        const pageHeight = 295;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        
-        let position = 0;
-        
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
+        try {
+          // Dynamically import the PDFExportView component
+          const { PDFExportView } = await import('@/components/PDFExportView');
+          
+          // Create a React root and render the PDF export view
+          const root = createRoot(tempContainer);
+          
+          // Render the component and wait for it to be ready
+          await new Promise<void>((resolve) => {
+            root.render(React.createElement(PDFExportView, { 
+              className: 'pdf-export-view' 
+            }));
+            
+            // Wait a bit for the component to render
+            setTimeout(resolve, 500);
+          });
+          
+          // Generate the PDF with improved quality settings
+          const canvas = await html2canvas(tempContainer, {
+            scale: 2, // Higher resolution
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: tempContainer.scrollWidth,
+            height: tempContainer.scrollHeight,
+            scrollX: 0,
+            scrollY: 0,
+          });
+          
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          
+          // Create PDF with A4 dimensions
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          
+          const imgWidth = pdfWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          let heightLeft = imgHeight;
+          let position = 0;
+          
+          // Add first page
           pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
+          heightLeft -= pdfHeight;
+          
+          // Add additional pages if needed
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+          }
+          
+          // Generate filename with current date
+          const currentDate = new Date().toISOString().split('T')[0];
+          const degree = get().degree;
+          const filename = degree 
+            ? `${degree.name.replace(/[^a-zA-Z0-9]/g, '_')}_Academic_Plan_${currentDate}.pdf`
+            : `Academic_Plan_${currentDate}.pdf`;
+          
+          pdf.save(filename);
+          
+          // Clean up
+          root.unmount();
+        } finally {
+          // Remove the temporary container
+          document.body.removeChild(tempContainer);
         }
-        
-        pdf.save('uniplan-roadmap.pdf');
       },
 
       // Sync functions
