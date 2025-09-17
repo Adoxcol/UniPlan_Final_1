@@ -183,6 +183,7 @@ export interface AppState {
   removeSemester: (id: string) => void;
   updateSemester: (id: string, updates: Partial<Semester>) => void;
   reorderSemesters: (startIndex: number, endIndex: number) => void;
+  autoLayoutSemesters: () => void;
   
   addCourse: (semesterId: string, course: Omit<Course, 'id'>) => void;
   removeCourse: (semesterId: string, courseId: string) => void;

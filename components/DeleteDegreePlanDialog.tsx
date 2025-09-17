@@ -97,19 +97,21 @@ export function DeleteDegreePlanDialog({
             <Trash2 className="h-5 w-5 text-destructive" />
             Delete Entire Degree Plan
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              <strong>This action cannot be undone.</strong> This will permanently delete:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>All your semesters</li>
-              <li>All your courses</li>
-              <li>Your degree information</li>
-              <li>All progress and notes</li>
-            </ul>
-            <p className="text-sm text-muted-foreground mt-3">
-              Are you sure you want to delete your entire degree plan?
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              <p>
+                <strong>This action cannot be undone.</strong> This will permanently delete:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>All your semesters</li>
+                <li>All your courses</li>
+                <li>Your degree information</li>
+                <li>All progress and notes</li>
+              </ul>
+              <p className="text-sm text-muted-foreground mt-3">
+                Are you sure you want to delete your entire degree plan?
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

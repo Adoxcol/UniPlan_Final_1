@@ -97,6 +97,27 @@ export const useAppStore = create<AppState>()(
         set({ semesters: result });
       },
 
+      autoLayoutSemesters: () => {
+        const state = get();
+        const sortedSemesters = [...state.semesters].sort((a, b) => {
+          // First sort by year (earliest first)
+          if (a.year !== b.year) {
+            return a.year - b.year;
+          }
+          
+          // Then sort by season within the same year (Spring -> Summer -> Autumn)
+          const seasonOrder = { 'Spring': 1, 'Summer': 2, 'Autumn': 3 };
+          return seasonOrder[a.season] - seasonOrder[b.season];
+        });
+        
+        set({ semesters: sortedSemesters });
+        
+        get().saveToHistory('auto_layout_semesters', {
+          previousOrder: state.semesters.map(s => ({ id: s.id, name: s.name, year: s.year, season: s.season })),
+          newOrder: sortedSemesters.map(s => ({ id: s.id, name: s.name, year: s.year, season: s.season }))
+        });
+      },
+
       addCourse: (semesterId, courseData) => {
         const state = get();
         const colorIndex = state.semesters

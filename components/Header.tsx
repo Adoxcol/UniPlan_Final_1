@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Calendar, Grid3X3, Download, Database, BookOpen, Library, Plus, User, Shield } from 'lucide-react';
+import { Moon, Sun, Calendar, Grid3X3, Download, Database, BookOpen, Library, Plus, User, Shield, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -26,7 +26,8 @@ export function Header() {
   const { 
     showScheduleView, 
     toggleScheduleView,
-    exportToPDF 
+    exportToPDF,
+    autoLayoutSemesters 
   } = useAppStore();
   const { userId, signInWithEmail, signOut } = useAuth();
   
@@ -65,16 +66,13 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3">
-            <svg 
-              width="40"
-              height="40"
-              viewBox="0 0 40 40"
+            <img 
+              src="/logo.svg" 
+              alt="DegreePlan Logo" 
+              width={40} 
+              height={40} 
               className="h-10 w-10"
-              aria-label="DegreePlan Logo"
-            >
-              <rect width="40" height="40" rx="8" fill="currentColor" className="text-primary"/>
-              <path d="M12 14h16v2H12v-2zm0 4h16v2H12v-2zm0 4h12v2H12v-2z" fill="white"/>
-            </svg>
+            />
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text leading-tight">DegreePlan</h1>
               <div className="hidden md:block text-xs text-muted-foreground/80 dark:text-muted-foreground leading-tight">
@@ -98,6 +96,16 @@ export function Header() {
                 <Calendar className="h-4 w-4 mr-2" />
               )}
               {showScheduleView ? 'Grid View' : 'Schedule'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={autoLayoutSemesters}
+              className="h-9"
+            >
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              Auto Layout
             </Button>
             
             <Button
@@ -150,22 +158,18 @@ export function Header() {
             </DropdownMenu>
           </div>
           
-          {/* Theme toggle button - only render after mounting to avoid hydration mismatch */}
-          {mounted ? (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="h-9 w-9 hover:bg-accent/50 dark:hover:bg-accent transition-colors relative"
-            >
-              <Sun className="h-4 w-4 text-amber-500 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="h-4 w-4 text-slate-600 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-          ) : (
-            // Placeholder button to maintain layout during SSR
-            <div className="h-9 w-9 border border-border rounded-md opacity-50" />
-          )}
+          {/* Theme toggle button - suppress hydration warning due to theme state differences */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={mounted ? () => setTheme(theme === 'dark' ? 'light' : 'dark') : undefined}
+            disabled={!mounted}
+            className="h-9 w-9 hover:bg-accent/50 dark:hover:bg-accent transition-colors relative"
+          >
+            <Sun className="h-4 w-4 text-amber-500 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" suppressHydrationWarning />
+            <Moon className="h-4 w-4 text-slate-600 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" suppressHydrationWarning />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
 
           {userId && isAdmin && (
             <Link href="/admin">
