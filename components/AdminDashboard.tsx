@@ -366,9 +366,9 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           {/* User Growth Chart */}
           <Card className="border-0 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-t-lg">
+            <CardHeader className="bg-muted/50 rounded-t-lg border-b">
               <CardTitle className="flex items-center space-x-2">
-                <LineChart className="h-5 w-5 text-blue-600" />
+                <LineChart className="h-5 w-5 text-primary" />
                 <span>User Growth Analytics</span>
               </CardTitle>
               <CardDescription>Monthly user registration and growth trends</CardDescription>
@@ -390,23 +390,30 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={userGrowthData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="month" className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <XAxis 
+                      dataKey="month" 
+                      className="text-xs fill-muted-foreground" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs fill-muted-foreground" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Area
                       type="monotone"
                       dataKey="users"
                       stackId="1"
-                      stroke="#3B82F6"
-                      fill="#3B82F6"
+                      stroke="hsl(var(--chart-1))"
+                      fill="hsl(var(--chart-1))"
                       fillOpacity={0.6}
                     />
                     <Area
                       type="monotone"
                       dataKey="newUsers"
                       stackId="2"
-                      stroke="#10B981"
-                      fill="#10B981"
+                      stroke="hsl(var(--chart-2))"
+                      fill="hsl(var(--chart-2))"
                       fillOpacity={0.8}
                     />
                   </AreaChart>
@@ -418,9 +425,9 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Template Usage Distribution */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-100 rounded-t-lg">
+              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                 <CardTitle className="flex items-center space-x-2">
-                  <PieChart className="h-5 w-5 text-emerald-600" />
+                  <PieChart className="h-5 w-5 text-primary" />
                   <span>Template Usage</span>
                 </CardTitle>
                 <CardDescription>Distribution of template applications</CardDescription>
@@ -430,15 +437,15 @@ export default function AdminDashboard() {
                   config={{
                     BSCSE: {
                       label: "BSCSE",
-                      color: "#3B82F6",
+                      color: "hsl(var(--chart-1))",
                     },
                     BBA: {
                       label: "BBA",
-                      color: "#10B981",
+                      color: "hsl(var(--chart-2))",
                     },
                     Others: {
                       label: "Others",
-                      color: "#8B5CF6",
+                      color: "hsl(var(--chart-3))",
                     },
                   }}
                   className="h-[250px]"
@@ -455,32 +462,41 @@ export default function AdminDashboard() {
                           paddingAngle={5}
                           dataKey="value"
                         >
-                          {templateUsageData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
+                          {templateUsageData.map((entry, index) => {
+                            const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
+                            return (
+                              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                            );
+                          })}
                         </Pie>
                       </RechartsPieChart>
                     </ResponsiveContainer>
                 </ChartContainer>
                 <div className="mt-4 space-y-2">
-                  {templateUsageData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-sm font-medium">{item.name}</span>
+                  {templateUsageData.map((item, index) => {
+                    const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
+                    return (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                          ></div>
+                          <span className="text-sm font-medium text-foreground">{item.name}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{item.value}%</span>
                       </div>
-                      <span className="text-sm text-gray-600">{item.value}%</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
 
             {/* System Metrics */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-100 rounded-t-lg">
+              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                 <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
+                  <BarChart3 className="h-5 w-5 text-primary" />
                   <span>System Metrics</span>
                 </CardTitle>
                 <CardDescription>Real-time system performance</CardDescription>
@@ -490,15 +506,15 @@ export default function AdminDashboard() {
                   config={{
                     cpu: {
                       label: "CPU Usage",
-                      color: "#EF4444",
+                      color: "hsl(var(--chart-1))",
                     },
                     memory: {
                       label: "Memory Usage",
-                      color: "#F59E0B",
+                      color: "hsl(var(--chart-2))",
                     },
                     storage: {
                       label: "Storage Usage",
-                      color: "#8B5CF6",
+                      color: "hsl(var(--chart-3))",
                     },
                   }}
                   className="h-[250px]"
@@ -506,29 +522,36 @@ export default function AdminDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart data={systemMetricsData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="time" className="text-xs" />
-                      <YAxis className="text-xs" />
+                      <XAxis 
+                        dataKey="time" 
+                        className="text-xs fill-muted-foreground" 
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis 
+                        className="text-xs fill-muted-foreground" 
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Line
                         type="monotone"
                         dataKey="cpu"
-                        stroke="#EF4444"
+                        stroke="hsl(var(--chart-1))"
                         strokeWidth={2}
-                        dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 4 }}
                       />
                       <Line
                         type="monotone"
                         dataKey="memory"
-                        stroke="#F59E0B"
+                        stroke="hsl(var(--chart-2))"
                         strokeWidth={2}
-                        dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 2, r: 4 }}
                       />
                       <Line
                         type="monotone"
                         dataKey="storage"
-                        stroke="#8B5CF6"
+                        stroke="hsl(var(--chart-3))"
                         strokeWidth={2}
-                        dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-3))', strokeWidth: 2, r: 4 }}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
@@ -543,9 +566,9 @@ export default function AdminDashboard() {
        {permissions.canViewAnalytics && (
          <div className="space-y-6">
            <Card className="border-0 shadow-lg">
-             <CardHeader className="bg-gradient-to-r from-red-50 to-orange-100 rounded-t-lg">
+             <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                <CardTitle className="flex items-center space-x-2">
-                 <Server className="h-5 w-5 text-red-600" />
+                 <Server className="h-5 w-5 text-primary" />
                  <span>System Health Monitoring</span>
                </CardTitle>
                <CardDescription>Real-time system status and performance metrics</CardDescription>
@@ -669,9 +692,9 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
+              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                 <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <TrendingUp className="h-5 w-5 text-primary" />
                   <span>Recent Activity</span>
                 </CardTitle>
                 <CardDescription>Latest system events and user actions</CardDescription>
@@ -679,21 +702,21 @@ export default function AdminDashboard() {
               <CardContent className="p-0">
                 <div className="space-y-0">
                   {[
-                    { icon: UserPlus, color: 'text-green-600', bg: 'bg-green-50', action: 'New user registered', user: 'john.doe@university.edu', time: '2 minutes ago' },
-                    { icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', action: 'Template applied', user: 'jane.smith@university.edu', time: '5 minutes ago' },
-                    { icon: Share2, color: 'text-purple-600', bg: 'bg-purple-50', action: 'Plan shared publicly', user: 'mike.wilson@university.edu', time: '12 minutes ago' },
-                    { icon: Shield, color: 'text-amber-600', bg: 'bg-amber-50', action: 'Admin privileges granted', user: 'admin@university.edu', time: '1 hour ago' },
-                    { icon: Database, color: 'text-emerald-600', bg: 'bg-emerald-50', action: 'Template seeded', user: 'System', time: '2 hours ago' },
+                    { icon: UserPlus, color: 'text-primary', bg: 'bg-primary/10', action: 'New user registered', user: 'john.doe@university.edu', time: '2 minutes ago' },
+                    { icon: BookOpen, color: 'text-primary', bg: 'bg-primary/10', action: 'Template applied', user: 'jane.smith@university.edu', time: '5 minutes ago' },
+                    { icon: Share2, color: 'text-primary', bg: 'bg-primary/10', action: 'Plan shared publicly', user: 'mike.wilson@university.edu', time: '12 minutes ago' },
+                    { icon: Shield, color: 'text-primary', bg: 'bg-primary/10', action: 'Admin privileges granted', user: 'admin@university.edu', time: '1 hour ago' },
+                    { icon: Database, color: 'text-primary', bg: 'bg-primary/10', action: 'Template seeded', user: 'System', time: '2 hours ago' },
                   ].map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div key={index} className="flex items-center space-x-4 p-4 border-b hover:bg-muted/50 transition-colors">
                       <div className={`rounded-full p-2 ${activity.bg}`}>
                         <activity.icon className={`h-4 w-4 ${activity.color}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                        <p className="text-sm text-gray-500 truncate">{activity.user}</p>
+                        <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                        <p className="text-sm text-muted-foreground truncate">{activity.user}</p>
                       </div>
-                      <div className="text-xs text-gray-400">{activity.time}</div>
+                      <div className="text-xs text-muted-foreground">{activity.time}</div>
                     </div>
                   ))}
                 </div>
@@ -704,9 +727,9 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             {/* Quick Actions */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-t-lg">
+              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                 <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5 text-indigo-600" />
+                  <Settings className="h-5 w-5 text-primary" />
                   <span>Quick Actions</span>
                 </CardTitle>
               </CardHeader>
@@ -728,32 +751,32 @@ export default function AdminDashboard() {
 
             {/* System Status */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-100 rounded-t-lg">
+              <CardHeader className="bg-muted/50 rounded-t-lg border-b">
                 <CardTitle className="flex items-center space-x-2">
-                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  <CheckCircle className="h-5 w-5 text-primary" />
                   <span>System Status</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Database</span>
+                  <span className="text-sm text-muted-foreground">Database</span>
                   <div className="flex items-center space-x-1">
                     <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-green-600">Online</span>
+                    <span className="text-xs text-green-600 dark:text-green-400">Online</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">API Services</span>
+                  <span className="text-sm text-muted-foreground">API Services</span>
                   <div className="flex items-center space-x-1">
                     <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-green-600">Healthy</span>
+                    <span className="text-xs text-green-600 dark:text-green-400">Healthy</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Storage</span>
+                  <span className="text-sm text-muted-foreground">Storage</span>
                   <div className="flex items-center space-x-1">
                     <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-xs text-yellow-600">75% Used</span>
+                    <span className="text-xs text-yellow-600 dark:text-yellow-400">75% Used</span>
                   </div>
                 </div>
               </CardContent>

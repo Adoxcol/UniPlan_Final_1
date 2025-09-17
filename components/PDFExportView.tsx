@@ -6,14 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
+import { useTheme } from 'next-themes';
 import type { Semester, Course } from '@/lib/types';
 
 interface PDFExportViewProps {
   className?: string;
+  forceTheme?: 'light' | 'dark';
 }
 
-function PDFExportViewComponent({ className = '' }: PDFExportViewProps) {
-  const { semesters, calculateCumulativeGPA, calculateSemesterGPA, degree } = useAppStore();
+function PDFExportViewComponent({ className = '', forceTheme }: PDFExportViewProps) {
+  const { semesters, calculateCumulativeGPA, calculateSemesterGPA, degree, notes } = useAppStore();
+  const { theme: currentTheme } = useTheme();
+  const theme = forceTheme || currentTheme || 'light';
   
   // Memoize expensive calculations
   const progressStats = useMemo(() => {
@@ -109,8 +113,34 @@ function PDFExportViewComponent({ className = '' }: PDFExportViewProps) {
               <div className="text-sm text-blue-800">{semester.notes}</div>
             </div>
           )}
-          <div className="space-y-2">
-            {semester.courses.map(renderCourse)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {semester.courses.map((course) => (
+              <div key={course.id} className={`${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} p-4 rounded-lg border`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{course.name}</h4>
+                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{course.credits} cr</span>
+                </div>
+                {course.notes && (
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-2`}>{course.notes}</div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {course.grade !== undefined && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-green-900/50 text-green-300 border border-green-700' : 'bg-green-100 text-green-800'}`}>
+                      {course.grade === 4 ? 'A' : 
+                       course.grade === 3.7 ? 'A-' :
+                       course.grade === 3.3 ? 'B+' :
+                       course.grade === 3 ? 'B' :
+                       course.grade === 2.7 ? 'B-' :
+                       course.grade === 2.3 ? 'C+' :
+                       course.grade === 2 ? 'C' :
+                       course.grade === 1.7 ? 'C-' :
+                       course.grade === 1.3 ? 'D+' :
+                       course.grade === 1 ? 'D' : 'F'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -126,14 +156,14 @@ function PDFExportViewComponent({ className = '' }: PDFExportViewProps) {
   }
 
   return (
-    <div className={`max-w-4xl mx-auto p-6 bg-white ${className}`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className={`max-w-4xl mx-auto p-6 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} ${className}`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div className="text-center mb-8 border-b pb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Academic Plan</h1>
+      <div className={`text-center mb-8 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
+        <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Academic Plan</h1>
         {degree && (
-          <div className="text-lg text-gray-700 mb-2">{degree.name}</div>
+          <div className={`text-lg ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'} mb-2`}>{degree.name}</div>
         )}
-        <div className="text-sm text-gray-600">
+        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           Generated on {new Date().toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'long', 
@@ -168,50 +198,50 @@ function PDFExportViewComponent({ className = '' }: PDFExportViewProps) {
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 border rounded-lg">
+          <div className={`text-center p-4 border rounded-lg ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50'}`}>
             <div className="flex items-center justify-center mb-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
+              <BookOpen className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
             </div>
-            <div className="text-sm text-gray-600">
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               {degree ? 'Degree Credits' : 'Total Credits'}
             </div>
-            <div className="text-xl font-bold">
+            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {degree ? degree.totalCreditsRequired : progressStats.totalCredits}
             </div>
           </div>
 
-          <div className="text-center p-4 border rounded-lg">
+          <div className={`text-center p-4 border rounded-lg ${theme === 'dark' ? 'bg-green-900/30 border-green-700' : 'bg-green-50'}`}>
             <div className="flex items-center justify-center mb-2">
-              <Target className="h-5 w-5 text-green-600" />
+              <Target className={`h-5 w-5 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
             </div>
-            <div className="text-sm text-gray-600">Completed</div>
-            <div className="text-xl font-bold">{progressStats.completedCredits}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Completed</div>
+            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>{progressStats.completedCredits}</div>
           </div>
 
-          <div className="text-center p-4 border rounded-lg">
+          <div className={`text-center p-4 border rounded-lg ${theme === 'dark' ? 'bg-purple-900/30 border-purple-700' : 'bg-purple-50'}`}>
             <div className="flex items-center justify-center mb-2">
-              <Award className="h-5 w-5 text-purple-600" />
+              <Award className={`h-5 w-5 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} />
             </div>
-            <div className="text-sm text-gray-600">Cumulative GPA</div>
-            <div className="text-xl font-bold">
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Cumulative GPA</div>
+            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>
               {progressStats.cumulativeGPA > 0 ? progressStats.cumulativeGPA.toFixed(2) : '--'}
             </div>
           </div>
 
-          <div className="text-center p-4 border rounded-lg">
+          <div className={`text-center p-4 border rounded-lg ${theme === 'dark' ? 'bg-orange-900/30 border-orange-700' : 'bg-orange-50'}`}>
             <div className="flex items-center justify-center mb-2">
-              <Calendar className="h-5 w-5 text-orange-600" />
+              <Calendar className={`h-5 w-5 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`} />
             </div>
-            <div className="text-sm text-gray-600">Semesters</div>
-            <div className="text-xl font-bold">{semesters.length}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Semesters</div>
+            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`}>{semesters.length}</div>
           </div>
         </div>
       </div>
 
       {/* Semester Plan */}
       <div>
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+        <h2 className={`text-xl font-semibold mb-6 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <Calendar className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
           Semester Plan
         </h2>
         
@@ -220,10 +250,24 @@ function PDFExportViewComponent({ className = '' }: PDFExportViewProps) {
         </div>
       </div>
 
+      {/* Notes Section */}
+      {notes && notes.trim() && (
+        <div className="mb-8">
+          <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4 flex items-center gap-2`}>
+            <BookOpen className={`h-6 w-6 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+            Notes
+          </h2>
+          <div className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} p-6 rounded-lg border`}>
+            <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} whitespace-pre-wrap`}>{notes}</div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="mt-8 pt-6 border-t text-center text-xs text-gray-500">
-        <div>Generated by UniPlan - Academic Planning Platform</div>
-        <div className="mt-1">Visit uniplan.app for more features</div>
+      <div className={`mt-8 pt-6 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} text-center`}>
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+          Generated by UniPlan Academic Planner on {new Date().toLocaleDateString()}
+        </p>
       </div>
     </div>
   );

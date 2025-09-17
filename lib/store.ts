@@ -394,13 +394,25 @@ export const useAppStore = create<AppState>()(
         const { createRoot } = await import('react-dom/client');
         const React = await import('react');
         
+        // Get current theme
+        const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        
         // Create a temporary container for the PDF export view
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
         tempContainer.style.top = '-9999px';
         tempContainer.style.width = '210mm'; // A4 width
-        tempContainer.style.backgroundColor = 'white';
+        
+        // Set background color based on theme
+        const backgroundColor = currentTheme === 'dark' ? '#111827' : '#ffffff';
+        tempContainer.style.backgroundColor = backgroundColor;
+        
+        // Apply theme class to container
+        if (currentTheme === 'dark') {
+          tempContainer.classList.add('dark');
+        }
+        
         document.body.appendChild(tempContainer);
         
         try {
@@ -413,7 +425,8 @@ export const useAppStore = create<AppState>()(
           // Render the component and wait for it to be ready
           await new Promise<void>((resolve) => {
             root.render(React.createElement(PDFExportView, { 
-              className: 'pdf-export-view' 
+              className: 'pdf-export-view',
+              forceTheme: currentTheme
             }));
             
             // Wait a bit for the component to render
@@ -425,7 +438,7 @@ export const useAppStore = create<AppState>()(
             scale: 2, // Higher resolution
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff',
+            backgroundColor: backgroundColor,
             width: tempContainer.scrollWidth,
             height: tempContainer.scrollHeight,
             scrollX: 0,
