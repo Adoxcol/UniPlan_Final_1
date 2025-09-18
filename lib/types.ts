@@ -42,10 +42,53 @@ export interface Schedule {
   };
 }
 
+// Action history data types for undo/redo functionality
+export interface ActionHistoryData {
+  semesters?: Semester[];
+  newSemesters?: Semester[];
+  [key: string]: unknown;
+}
+
 export interface ActionHistoryItem {
   type: string;
-  data: Record<string, any>;
+  data: ActionHistoryData;
   timestamp: number;
+}
+
+// Database record types for Supabase
+export interface DatabaseSemester {
+  id: string;
+  name: string;
+  year: number;
+  season: 'Autumn' | 'Spring' | 'Summer';
+  is_active: boolean;
+  notes?: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseCourse {
+  id: string;
+  name: string;
+  credits: number;
+  days_of_week?: string[] | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  grade?: number | null;
+  color?: string | null;
+  notes?: string | null;
+  semester_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Legacy degree type for backward compatibility
+export interface LegacyDegree {
+  name: string;
+  totalCredits?: number;
+  totalCreditsRequired?: number;
 }
 
 export interface Profile {
@@ -211,7 +254,7 @@ export interface AppState {
   saveAllToSupabase: () => Promise<void>;
   exportData: () => string;
   importData: (jsonData: string) => { success: boolean; message: string };
-  saveToHistory: (action: string, data: Record<string, any>) => void;
+  saveToHistory: (action: string, data: ActionHistoryData) => void;
   undo: () => void;
   redo: () => void;
 }

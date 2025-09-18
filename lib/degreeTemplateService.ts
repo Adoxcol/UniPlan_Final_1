@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { DegreeTemplate, DegreeTemplateSemester, DegreeTemplateCourse } from './types';
+import { DegreeTemplate, DegreeTemplateSemester, DegreeTemplateCourse, Semester } from './types';
 
 // Generate a unique ID for database records
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -33,7 +33,7 @@ export class DegreeTemplateService {
    */
   static async createTemplate(
     templateData: CreateDegreeTemplateData,
-    semesters: any[]
+    semesters: Semester[]
   ): Promise<DegreeTemplate> {
     if (!supabase) throw new Error('Supabase client not configured');
     const { data: { user } } = await supabase.auth.getUser();

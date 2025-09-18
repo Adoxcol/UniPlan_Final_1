@@ -41,7 +41,7 @@ export function useAuditLogger() {
   const logUserManagement = useCallback(async (
     action: 'admin_promote' | 'admin_demote' | 'admin_create',
     targetUserId: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: Omit<AuditLogOptions, 'resourceId' | 'details'> = {}
   ) => {
     return auditService.logUserManagement(action, targetUserId, details, options);
@@ -50,7 +50,7 @@ export function useAuditLogger() {
   const logTemplateAction = useCallback(async (
     action: 'template_create' | 'template_update' | 'template_delete' | 'template_publish',
     templateId: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: Omit<AuditLogOptions, 'resourceId' | 'details'> = {}
   ) => {
     return auditService.logTemplateAction(action, templateId, details, options);
@@ -58,7 +58,7 @@ export function useAuditLogger() {
 
   const logDataOperation = useCallback(async (
     action: 'data_export' | 'data_import' | 'system_backup' | 'system_restore',
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: AuditLogOptions = {}
   ) => {
     return auditService.logDataOperation(action, details, options);
@@ -68,7 +68,7 @@ export function useAuditLogger() {
     resourceType: AuditResourceType,
     operationType: string,
     affectedCount: number,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: AuditLogOptions = {}
   ) => {
     return auditService.logBulkOperation(resourceType, operationType, affectedCount, details, options);
@@ -228,7 +228,7 @@ export function useProfileAuditLogger() {
 export function useSharedPlanAuditLogger() {
   const { logAction } = useAuditLogger();
 
-  const logPlanShare = useCallback(async (planId: string, shareDetails: any) => {
+  const logPlanShare = useCallback(async (planId: string, shareDetails: Record<string, unknown>) => {
     return logAction('plan_share', 'shared_plan', {
       resourceId: planId,
       details: {

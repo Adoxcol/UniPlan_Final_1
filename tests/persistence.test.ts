@@ -330,7 +330,7 @@ describe('Data Persistence', () => {
     // Verify the restore point contains the original state
     const restorePoint = state.actionHistory[state.actionHistory.length - 1];
     expect(restorePoint.data.semesters).toHaveLength(1);
-    expect(restorePoint.data.semesters[0].name).toBe('Original Semester');
+    expect(restorePoint.data.semesters![0].name).toBe('Original Semester');
     expect(restorePoint.data.notes).toBe('Original notes');
   });
 });

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AppState, Semester, Course, ScheduleConflict, TimeSlot, ActionHistoryItem } from './types';
+import type { AppState, Semester, Course, ScheduleConflict, TimeSlot, ActionHistoryItem, ActionHistoryData, DatabaseSemester, DatabaseCourse, LegacyDegree } from './types';
 import { timeStringToMinutes } from './utils';
 import { supabase } from './supabaseClient';
 import { importDataSchema } from './validationSchemas';
@@ -508,14 +508,14 @@ export const useAppStore = create<AppState>()(
         const profile = profiles.data || null;
         const semesters = semestersRes.data || [];
         const courses = coursesRes.data || [];
-        const semestersWithCourses: Semester[] = semesters.map((s: any) => ({
+        const semestersWithCourses: Semester[] = semesters.map((s: DatabaseSemester) => ({
           id: s.id,
           name: s.name,
           year: s.year,
           season: s.season,
           isActive: s.is_active,
           notes: s.notes ?? undefined,
-          courses: courses.filter((c: any) => c.semester_id === s.id).map((c: any) => ({
+          courses: courses.filter((c: DatabaseCourse) => c.semester_id === s.id).map((c: DatabaseCourse) => ({
             id: c.id,
             name: c.name,
             credits: c.credits,
@@ -563,12 +563,12 @@ export const useAppStore = create<AppState>()(
         // Identify orphaned records: items that exist in database but not in local state
         // These need to be deleted to reflect user's local changes (deletions)
         const semesterIdsToDelete = existingSemesters
-          .filter((s: any) => !currentSemesterIds.includes(s.id))
-        .map((s: any) => s.id);
+          .filter((s: { id: string }) => !currentSemesterIds.includes(s.id))
+        .map((s: { id: string }) => s.id);
           
         const courseIdsToDelete = existingCourses
-          .filter((c: any) => !currentCourseIds.includes(c.id))
-        .map((c: any) => c.id);
+          .filter((c: { id: string }) => !currentCourseIds.includes(c.id))
+        .map((c: { id: string }) => c.id);
         
         // Perform deletions first to maintain referential integrity
         // Delete courses before semesters due to foreign key constraints
@@ -626,7 +626,7 @@ export const useAppStore = create<AppState>()(
       },
 
       // Action history methods for implementing undo/redo functionality
-      saveToHistory: (action: string, data: Record<string, any>) => {
+      saveToHistory: (action: string, data: ActionHistoryData) => {
         const state = get();
         // Create a snapshot of the current state before the action
         // Deep clone the data to prevent reference issues when restoring state
@@ -745,11 +745,12 @@ export const useAppStore = create<AppState>()(
           // Normalize degree data to handle legacy properties
           let normalizedDegree = null;
           if (validatedData.degree) {
+            const legacyDegree = validatedData.degree as LegacyDegree;
             normalizedDegree = {
               name: validatedData.degree.name,
               // Use totalCreditsRequired if available, otherwise fall back to totalCredits, or default to 120
               totalCreditsRequired: validatedData.degree.totalCreditsRequired || 
-                                  (validatedData.degree as any).totalCredits || 
+                                  legacyDegree.totalCredits || 
                                   120
             };
           }

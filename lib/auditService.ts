@@ -21,7 +21,7 @@ export interface AuditLogEntry {
   action: AuditAction;
   resource_type: AuditResourceType;
   resource_id?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   success?: boolean;
@@ -33,7 +33,7 @@ export interface AuditLogOptions {
   userId?: string;
   adminUserId?: string;
   resourceId?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   success?: boolean;
@@ -131,7 +131,7 @@ class AuditService {
   async logUserManagement(
     action: 'admin_promote' | 'admin_demote' | 'admin_create',
     targetUserId: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: Omit<AuditLogOptions, 'resourceId' | 'details'> = {}
   ): Promise<{ success: boolean; error?: string }> {
     return this.logAdminAction(action, 'user', {
@@ -150,7 +150,7 @@ class AuditService {
   async logTemplateAction(
     action: 'template_create' | 'template_update' | 'template_delete' | 'template_publish',
     templateId: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: Omit<AuditLogOptions, 'resourceId' | 'details'> = {}
   ): Promise<{ success: boolean; error?: string }> {
     return this.logAdminAction(action, 'template', {
@@ -168,7 +168,7 @@ class AuditService {
    */
   async logDataOperation(
     action: 'data_export' | 'data_import' | 'system_backup' | 'system_restore',
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: AuditLogOptions = {}
   ): Promise<{ success: boolean; error?: string }> {
     return this.logAdminAction(action, 'system', {
@@ -187,7 +187,7 @@ class AuditService {
     resourceType: AuditResourceType,
     operationType: string,
     affectedCount: number,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: AuditLogOptions = {}
   ): Promise<{ success: boolean; error?: string }> {
     return this.logAdminAction('bulk_operation', resourceType, {
