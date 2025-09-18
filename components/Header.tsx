@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,24 +32,22 @@ export function Header() {
   } = useAppStore();
   const { userId, signInWithEmail, signOut } = useAuth();
   
-  // Client-side mounting state to prevent hydration mismatch
   const [mounted, setMounted] = useState(false);
-  
-  // Template dialog states
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showMyTemplates, setShowMyTemplates] = useState(false);
-  
-  // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    checkAdminStatus();
-  }, [userId]);
+  }, []);
 
-  const checkAdminStatus = async () => {
-    if (userId) {
+  useEffect(() => {
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+    const checkAdminStatus = async () => {
       try {
         const adminStatus = await isCurrentUserAdmin();
         setIsAdmin(adminStatus);
@@ -56,15 +55,15 @@ export function Header() {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
       }
-    } else {
-      setIsAdmin(false);
-    }
-  };
+    };
+    checkAdminStatus();
+  }, [userId]);
 
-  return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/90 dark:border-border/50">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-3">
+  // Early return prevents hydration mismatch
+  if (!mounted) {
+    return (
+      <header className="border-b bg-background/95 backdrop-blur">
+        <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
               src="/logo.svg" 
@@ -73,11 +72,28 @@ export function Header() {
               height={40} 
               className="h-10 w-10"
             />
-            <div className="flex flex-col">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text leading-tight">DegreePlan</h1>
-              <div className="hidden md:block text-xs text-muted-foreground/80 dark:text-muted-foreground leading-tight">
-                Your Personal University Roadmap
-              </div>
+            <h1 className="text-2xl font-bold">DegreePlan</h1>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  return (
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/90 dark:border-border/50">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img 
+            src="/logo.svg" 
+            alt="DegreePlan Logo" 
+            width={40} 
+            height={40} 
+            className="h-10 w-10"
+          />
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text leading-tight">DegreePlan</h1>
+            <div className="hidden md:block text-xs text-muted-foreground/80 dark:text-muted-foreground leading-tight">
+              Your Personal University Roadmap
             </div>
           </div>
         </div>
@@ -158,16 +174,18 @@ export function Header() {
             </DropdownMenu>
           </div>
           
-          {/* Theme toggle button - suppress hydration warning due to theme state differences */}
+          {/* Theme toggle button - safe now because mounted is guaranteed */}
           <Button
             variant="outline"
             size="icon"
-            onClick={mounted ? () => setTheme(theme === 'dark' ? 'light' : 'dark') : undefined}
-            disabled={!mounted}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="h-9 w-9 hover:bg-accent/50 dark:hover:bg-accent transition-colors relative"
           >
-            <Sun className="h-4 w-4 text-amber-500 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" suppressHydrationWarning />
-            <Moon className="h-4 w-4 text-slate-600 absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" suppressHydrationWarning />
+            {theme === 'dark' ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
             <span className="sr-only">Toggle theme</span>
           </Button>
 
@@ -190,11 +208,17 @@ export function Header() {
           )}
 
           {userId ? (
-            <Button variant="default" size="sm" onClick={() => signOut()}>
+            <Button variant="default" size="sm" onClick={signOut}>
               Sign out
             </Button>
           ) : (
-            <Button variant="default" size="sm" onClick={() => signInWithEmail(prompt('Email')||'', prompt('Password')||'')}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() =>
+                signInWithEmail(prompt('Email') || '', prompt('Password') || '')
+              }
+            >
               Sign in
             </Button>
           )}

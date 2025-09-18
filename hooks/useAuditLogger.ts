@@ -102,7 +102,7 @@ export function useCourseAuditLogger() {
     });
   }, [logAction]);
 
-  const logCourseUpdate = useCallback(async (courseId: string, changes: any) => {
+  const logCourseUpdate = useCallback(async (courseId: string, changes: Record<string, unknown>) => {
     return logAction('course_update', 'course', {
       resourceId: courseId,
       details: {

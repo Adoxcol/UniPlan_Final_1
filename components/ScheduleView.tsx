@@ -12,6 +12,23 @@ const TIME_SLOTS = [
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
 ];
 
+// Helper function to determine if a color is light or dark
+const getContrastColor = (hexColor: string): string => {
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+  
+  // Convert to RGB
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return white for dark colors, black for light colors
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
 export function ScheduleView() {
   const { getCurrentSchedule, getScheduleConflicts, currentSemester, semesters } = useAppStore();
   const activeSemester = semesters.find(s => s.id === currentSemester) ?? semesters.find(s => s.isActive);
@@ -109,8 +126,11 @@ export function ScheduleView() {
                       {courses.map(slot => (
                         <div
                           key={slot.course.id}
-                          className="text-xs p-1 rounded mb-1 text-white font-medium"
-                          style={{ backgroundColor: slot.course.color }}
+                          className="text-xs p-1 rounded mb-1 font-medium"
+                          style={{ 
+                            backgroundColor: slot.course.color || '#6366f1',
+                            color: getContrastColor(slot.course.color || '#6366f1')
+                          }}
                         >
                           <div className="truncate">{slot.course.name}</div>
                           <div className="text-xs opacity-90">
