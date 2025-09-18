@@ -9,8 +9,7 @@ describe('Degree Management', () => {
   it('should set and update degree information', () => {
     const degreeData = {
       name: 'Computer Science',
-      totalCredits: 120,
-      university: 'Test University'
+      totalCreditsRequired: 120
     };
 
     useAppStore.getState().setDegree(degreeData);

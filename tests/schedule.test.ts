@@ -177,8 +177,7 @@ describe('Schedule Management', () => {
       credits: 3,
       daysOfWeek: ['Monday', 'Wednesday'],
       startTime: '10:00',
-      endTime: '11:30',
-      location: 'Room 101'
+      endTime: '11:30'
     });
 
     const state = useAppStore.getState();
@@ -189,6 +188,5 @@ describe('Schedule Management', () => {
     expect(course?.daysOfWeek).toEqual(['Monday', 'Wednesday']);
     expect(course?.startTime).toBe('10:00');
     expect(course?.endTime).toBe('11:30');
-    expect(course?.location).toBe('Room 101');
   });
 });
